@@ -203,3 +203,49 @@ export default function SeekerLayout() {
                     </div>
                   </motion.div>
                 )}
+                   </AnimatePresence>
+            </div>
+            <div className="flex items-center gap-4 border-l pl-4 border-gray-200">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold overflow-hidden cursor-pointer relative group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {user?.profilePicture ? (
+                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    "JS"
+                  )}
+                  <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-[10px] rounded-full">
+                    Upload
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload} 
+                />
+                <div className="hidden sm:block">
+                  <p className="text-sm font-medium text-gray-900">John Seeker</p>
+                  <p className="text-xs text-gray-500">Premium Member</p>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200 hover:bg-red-50"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
