@@ -153,3 +153,65 @@ export default function Home() {
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{freeJobs[currentIndex].title}</h3>
                       <p className="text-primary-600 font-semibold">{freeJobs[currentIndex].company}</p>
                     </div>
+                    <span className="px-4 py-1.5 bg-primary-50 text-primary-700 text-sm font-bold rounded-full">
+                      {freeJobs[currentIndex].type}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-8 text-base leading-relaxed line-clamp-3">
+                    {freeJobs[currentIndex].description}
+                  </p>
+
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center text-base text-gray-500">
+                      <MapPin className="w-5 h-5 mr-3 text-gray-400" />
+                      {freeJobs[currentIndex].location}
+                    </div>
+                    <div className="flex items-center text-base text-gray-500">
+                      <DollarSign className="w-5 h-5 mr-3 text-gray-400" />
+                      {freeJobs[currentIndex].salary}
+                    </div>
+                    <div className="flex items-center text-base text-gray-500">
+                      <Clock className="w-5 h-5 mr-3 text-gray-400" />
+                      {freeJobs[currentIndex].posted}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Unclickable state indicator */}
+                <div className="w-full text-center px-4 py-3 bg-gray-50 text-gray-500 rounded-xl font-bold cursor-not-allowed border border-gray-200 uppercase tracking-wider text-sm">
+                  Login to Apply
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          
+          <div className="flex justify-center gap-2 mt-8">
+            {freeJobs.map((_, idx) => (
+              <div 
+                key={idx} 
+                className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-primary-600 w-8' : 'bg-gray-300'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-6">Stop sifting through hundreds of unqualified emails.</h2>
+          <p className="text-xl text-gray-400 mb-10">Join the only platform with built-in credential verification and a subscription paywall that ensures only serious candidates apply.</p>
+          <ul className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10">
+            <li className="flex items-center gap-2"><CheckCircle className="text-primary-500 w-5 h-5" /> Verify Skills Online</li>
+            <li className="flex items-center gap-2"><CheckCircle className="text-primary-500 w-5 h-5" /> Track Application Status</li>
+            <li className="flex items-center gap-2"><CheckCircle className="text-primary-500 w-5 h-5" /> Fast Local Payments</li>
+          </ul>
+          <Link to="/register?role=employer" className="inline-block px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white rounded-full font-bold text-lg transition-all shadow-lg shadow-primary-500/20">
+            Start Recruiting Now
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
