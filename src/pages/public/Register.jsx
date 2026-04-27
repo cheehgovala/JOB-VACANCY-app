@@ -128,3 +128,76 @@ export default function Register() {
 
           <form className="space-y-5" onSubmit={handleRegister}>
             {role === 'employer' ? (
+                   <div>
+                <label className="block text-sm font-medium text-gray-700">Company Name</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Building className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} required className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border" placeholder="Acme Corp Malawi" />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} required className={`focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${errors.name ? 'border-red-500' : ''}`} placeholder="John Doe" />
+                </div>
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email address</label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} required className={`focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${errors.email ? 'border-red-500' : ''}`} placeholder="you@example.com" />
+              </div>
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone Number (Airtel/TNM)</label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className={`focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${errors.phone ? 'border-red-500' : ''}`} placeholder="+265 88X XXX XXX" />
+              </div>
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input type="password" name="password" value={formData.password} onChange={handleChange} required className={`focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${errors.password ? 'border-red-500' : ''}`} placeholder="••••••••" />
+              </div>
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all active:scale-[0.98]"
+              >
+                Create Account
+              </button>
+            </div>
+            
+            <p className="text-xs text-center text-gray-500 mt-4">
+              By registering, you agree to our <a href="#" className="text-primary-600 hover:underline">Terms of Service</a> and <a href="#" className="text-primary-600 hover:underline">Privacy Policy</a>. OTP verification will be required on the next step.
+            </p>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+}     
