@@ -58,3 +58,98 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6"
+          >
+            The Smarter Way to <br className="hidden md:block" />
+            <span className="text-primary-600">Hire and Get Hired</span> in Malawi
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-4 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-10"
+          >
+            A premium recruitment marketplace connecting serious employers with verified talent. Smart matching, digital CVs, and pre-employment assessments—all in one platform.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col sm:flex-row justify-center items-center gap-4"
+          >
+            <Link to="/register?role=seeker" className="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-bold text-lg transition-all shadow-lg shadow-primary-500/30 flex items-center justify-center gap-2">
+              Find a Job <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link to="/register?role=employer" className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-300 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2">
+              Post a Vacancy <Users className="w-5 h-5 text-gray-500" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Platform Features</h2>
+            <p className="mt-4 text-lg text-gray-500">Built specifically to solve Malawi's recruitment challenges.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="glass p-8 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-8 h-8 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Online Assessments</h3>
+              <p className="text-gray-600">Employers can build and attach timed exams to job listings. Filter your shortlist by immediate test results.</p>
+            </div>
+
+            <div className="glass p-8 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-14 h-14 bg-secondary-100 rounded-xl flex items-center justify-center mb-6">
+                <Search className="w-8 h-8 text-secondary-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Candidate Matching</h3>
+              <p className="text-gray-600">Our algorithm scores applicants by skill compatibility, reducing manual CV screening time by over 80%.</p>
+            </div>
+
+            <div className="glass p-8 rounded-2xl hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+                <FileText className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Digital CV Builder</h3>
+              <p className="text-gray-600">Job seekers use step-by-step guidance to automatically generate ATS-friendly, professional PDF CVs.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Free Jobs Overview Section */}
+      <section className="py-24 bg-gray-50 border-t border-gray-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Latest Opportunities</h2>
+            <p className="mt-4 text-lg text-gray-500">Explore some of the roles currently available on our platform.</p>
+          </div>
+
+          <div className="relative h-[480px] sm:h-[420px] w-full max-w-2xl mx-auto" style={{ perspective: '1200px' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, rotateX: -90 }}
+                animate={{ opacity: 1, rotateX: 0 }}
+                exit={{ opacity: 0, rotateX: 90 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                style={{ transformOrigin: "center center" }}
+                className="absolute inset-0 bg-white rounded-2xl p-8 shadow-xl border border-gray-100 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{freeJobs[currentIndex].title}</h3>
+                      <p className="text-primary-600 font-semibold">{freeJobs[currentIndex].company}</p>
+                    </div>
