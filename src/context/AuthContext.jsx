@@ -166,3 +166,26 @@ export function AuthProvider({ children }) {
     localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
     return { success: true, message: 'Application submitted perfectly' };
   };
+
+  const publishJob = (jobData) => {
+    if (!user || user.role !== 'employer') return;
+    
+    setMockJobs(prev => [jobData, ...prev]);
+    
+    const updatedUser = {
+      ...user,
+      postedJobs: [...(user.postedJobs || []), jobData]
+    };
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  };
+
+  const updateProfilePicture = (base64Image) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      profilePicture: base64Image
+    };
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  };
