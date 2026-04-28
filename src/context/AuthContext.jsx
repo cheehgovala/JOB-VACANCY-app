@@ -93,3 +93,39 @@ export function AuthProvider({ children }) {
 
     return { success: false, message: 'Invalid credentials. Please make sure you are registered.' };
   };
+  
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('talent_mw_user');
+  };
+
+  const updateSubscription = (plan, durationDays) => {
+    if (!user) return;
+    
+    // Calculate expiry
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + durationDays);
+
+    const updatedUser = {
+      ...user,
+      hasActiveSubscription: true,
+      subscriptionPlan: plan,
+      subscriptionExpiry: expiryDate.toISOString()
+    };
+    
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  };
+
+  const updateSeekerProfile = (profileData, completeness) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      seekerProfile: {
+        ...profileData,
+        completeness
+      }
+    };
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  };
