@@ -43,3 +43,32 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('talent_mw_users', JSON.stringify(mockUsers));
   }, [mockUsers]);
+  
+  const registerUser = (userData) => {
+    if (mockUsers.some(u => u.email === userData.email)) {
+      return { success: false, message: 'Email already exists' };
+    }
+    const newUser = {
+      id: Math.random().toString(36).substring(7),
+      ...userData,
+      hasActiveSubscription: false,
+      subscriptionPlan: null,
+      subscriptionExpiry: null,
+      savedJobs: [],
+      appliedJobs: [],
+      postedJobs: [],
+      profilePicture: null
+    };
+    setMockUsers(prev => [...prev, newUser]);
+    setUser(newUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(newUser));
+    return { success: true, user: newUser };
+  };
+
+  const login = (email, password) => {
+    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
+    if (foundUser) {
+      setUser(foundUser);
+      localStorage.setItem('talent_mw_user', JSON.stringify(foundUser));
+      return { success: true, user: foundUser };
+    }
