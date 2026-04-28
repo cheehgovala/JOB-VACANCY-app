@@ -46,3 +46,24 @@ function App() {
         {/* Standalone CV Builder without Navigation */}
         <Route path="/seeker/cv-builder" element={<CVBuilder />} />
         
+        {/* Seeker Container Routes */}
+        <Route path="/seeker" element={<SeekerLayout />}>
+          <Route path="dashboard" element={<SeekerDashboard />} />
+          <Route path="jobs" element={<JobSearch />} />
+          <Route path="applications" element={<Applications />} />
+          <Route path="assessments" element={<AssessmentsList />} />
+        </Route>
+        
+        {/* Employer Routes */}
+        <Route path="/employer" element={<EmployerLayout />}>
+          <Route path="dashboard" element={<EmployerDashboard />} />
+          <Route path="post-job" element={<JobPosting />} />
+          <Route path="pipeline" element={<Pipeline />} />
+          <Route path="assessments" element={<AssessmentBuilder />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
+
+export default App;
