@@ -129,3 +129,40 @@ export function AuthProvider({ children }) {
     setUser(updatedUser);
     localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
   };
+  
+  const saveJob = (jobId) => {
+    if (!user || user.role !== 'seeker') return;
+    const savedJobs = user.savedJobs || [];
+    if (savedJobs.includes(jobId)) return;
+    
+    const updatedUser = { ...user, savedJobs: [...savedJobs, jobId] };
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  };
+
+  const applyToJob = (job) => {
+    if (!user || user.role !== 'seeker') return { success: false, message: 'Must be logged in as seeker' };
+    if (!user.hasActiveSubscription) return { success: false, message: 'Subscription required' };
+    
+    const appliedJobs = user.appliedJobs || [];
+    if (appliedJobs.includes(job.id)) return { success: false, message: 'Already applied' };
+    
+    // Create new application
+    const newApp = {
+      id: Math.random().toString(36).substring(7),
+      jobId: job.id,
+      jobTitle: job.title,
+      applicantId: user.id,
+      applicantName: user.seekerProfile?.personal?.fullName || 'Anonymous Seeker',
+      applicantProfile: user.seekerProfile || {},
+      status: 'Pending',
+      date: new Date().toISOString()
+    };
+    
+    setMockApplications(prev => [...prev, newApp]);
+    
+    const updatedUser = { ...user, appliedJobs: [...appliedJobs, job.id] };
+    setUser(updatedUser);
+    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+    return { success: true, message: 'Application submitted perfectly' };
+  };
