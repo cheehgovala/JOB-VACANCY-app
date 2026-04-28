@@ -18,3 +18,28 @@ export function AuthProvider({ children }) {
     const storedUsers = localStorage.getItem('talent_mw_users');
     return storedUsers ? JSON.parse(storedUsers) : [];
   });
+
+  // Initialize from local storage
+  useEffect(() => {
+    const storedUser = localStorage.getItem('talent_mw_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Failed to parse stored user', e);
+      }
+    }
+  }, []);
+
+  // Sync mockApplications to localStorage
+  useEffect(() => {
+    localStorage.setItem('talent_mw_apps', JSON.stringify(mockApplications));
+  }, [mockApplications]);
+
+  useEffect(() => {
+    localStorage.setItem('talent_mw_jobs', JSON.stringify(mockJobs));
+  }, [mockJobs]);
+
+  useEffect(() => {
+    localStorage.setItem('talent_mw_users', JSON.stringify(mockUsers));
+  }, [mockUsers]);
