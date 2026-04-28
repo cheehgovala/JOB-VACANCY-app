@@ -189,3 +189,18 @@ export function AuthProvider({ children }) {
     setUser(updatedUser);
     localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
   };
+  
+  return (
+    <AuthContext.Provider value={{ user, login, logout, registerUser, updateSubscription, updateSeekerProfile, saveJob, applyToJob, mockApplications, mockJobs, publishJob, updateProfilePicture }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
