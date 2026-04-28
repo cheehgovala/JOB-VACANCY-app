@@ -72,3 +72,24 @@ export function AuthProvider({ children }) {
       localStorage.setItem('talent_mw_user', JSON.stringify(foundUser));
       return { success: true, user: foundUser };
     }
+    
+    // Fallback demo behavior for testing
+    if (email.includes('employer')) {
+      const demoUser = {
+        id: 'demo-emp', role: 'employer', email, hasActiveSubscription: true, savedJobs: [], appliedJobs: [], postedJobs: []
+      };
+      setUser(demoUser);
+      localStorage.setItem('talent_mw_user', JSON.stringify(demoUser));
+      return { success: true, user: demoUser };
+    }
+    if (email.includes('seeker') || email === 'demo@demo.com') {
+      const demoUser = {
+        id: 'demo-seek', role: 'seeker', email, hasActiveSubscription: true, savedJobs: [], appliedJobs: [], postedJobs: []
+      };
+      setUser(demoUser);
+      localStorage.setItem('talent_mw_user', JSON.stringify(demoUser));
+      return { success: true, user: demoUser };
+    }
+
+    return { success: false, message: 'Invalid credentials. Please make sure you are registered.' };
+  };
