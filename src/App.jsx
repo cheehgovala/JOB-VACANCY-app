@@ -17,9 +17,7 @@ import JobSearch from './pages/seeker/JobSearch';
 import Applications from './pages/seeker/Applications';
 import AssessmentsList from './pages/seeker/AssessmentsList';
 import Exam from './pages/seeker/Exam';
-import InterviewPreRecorded from './pages/seeker/InterviewPreRecorded';
-import InterviewLive from './pages/seeker/InterviewLive';
-import InterviewText from './pages/seeker/InterviewText';
+
 
 import EmployerDashboard from './pages/employer/Dashboard';
 import JobPosting from './pages/employer/JobPosting';
@@ -41,9 +39,6 @@ function App() {
 
       <Route element={<SubscriptionGuard />}>
         <Route path="/seeker/exam/:id" element={<Exam />} />
-        <Route path="/seeker/interview/pre-recorded/:id" element={<InterviewPreRecorded />} />
-        <Route path="/seeker/interview/live/:id" element={<InterviewLive />} />
-        <Route path="/seeker/interview/text/:id" element={<InterviewText />} />
       </Route>
 
       {/* Protected Routes */}
