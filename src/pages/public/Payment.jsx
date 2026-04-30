@@ -1,12 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle, ChevronLeft, CreditCard, Smartphone } from 'lucide-react';
+import { CheckCircle, ChevronLeft, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { getPhoneError } from '../../utils/validation.js';
 
 const PAYMENT_METHODS = [
-  { id: 'airtel_money', name: 'Airtel Money', icon: Smartphone, color: 'text-red-500', bg: 'bg-red-50' },
-  { id: 'tnm_mpamba', name: 'TNM Mpamba', icon: Smartphone, color: 'text-green-500', bg: 'bg-green-50' },
-  { id: 'nbm_bank', name: 'NBM Bank Transfer', icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50' }
+  { id: 'tnm_mpamba', name: 'TNM Mpamba', icon: Smartphone, color: 'text-green-500', bg: 'bg-green-50' }
 ];
 
 const PLAN_DETAILS = {
@@ -22,11 +21,24 @@ export default function Payment() {
   
   const [method, setMethod] = useState(PAYMENT_METHODS[0].id);
   const [account, setAccount] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
+  const handleAccountChange = (e) => {
+    setAccount(e.target.value);
+    if (phoneError) {
+      setPhoneError('');
+    }
+  };
+
   const handlePay = (e) => {
     e.preventDefault();
+    const error = getPhoneError(account);
+    if (error) {
+      setPhoneError(error);
+      return;
+    }
     setIsProcessing(true);
     
     // Simulate payment delay
@@ -104,16 +116,17 @@ export default function Payment() {
                   exit={{ opacity: 0, height: 0 }}
                 >
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mobile Number
+                    Mobile Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     required
                     value={account}
-                    onChange={(e) => setAccount(e.target.value)}
-                    className="focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border"
-                    placeholder="e.g. 088X XXX XXX or 099X XXX XXX"
+                    onChange={handleAccountChange}
+                    className={`focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${phoneError ? 'border-red-500' : ''}`}
+                    placeholder="e.g. 088X XXX XXX or 08X XXX XXX"
                   />
+                  {phoneError && <p className="mt-1 text-sm text-red-600">{phoneError}</p>}
                   <p className="mt-2 text-xs text-gray-500">A prompt will be sent to your phone to enter your PIN.</p>
                 </motion.div>
               ) : (
@@ -157,6 +170,10 @@ export default function Payment() {
                 `Pay ${plan.price}`
               )}
             </button>
+            
+            <p className="text-xs text-gray-500 text-center mt-4">
+              <span className="text-red-500">*</span> Required field
+            </p>
           </form>
         </div>
       </div>
