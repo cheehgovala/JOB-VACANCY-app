@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, ChevronLeft, CreditCard, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -94,3 +94,72 @@ export default function Payment() {
                 </label>
               ))}
             </div>
+
+            <AnimatePresence mode="popLayout">
+              {method !== 'nbm_bank' ? (
+                <motion.div
+                  key="mobile"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mobile Number
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={account}
+                    onChange={(e) => setAccount(e.target.value)}
+                    className="focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border"
+                    placeholder="e.g. 088X XXX XXX or 099X XXX XXX"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">A prompt will be sent to your phone to enter your PIN.</p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="bank"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bank Account Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={account}
+                    onChange={(e) => setAccount(e.target.value)}
+                    className="focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border"
+                    placeholder="Enter your NBM account number"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className={`w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white transition-all active:scale-[0.98] ${
+                isProcessing ? 'bg-primary-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'
+              }`}
+            >
+              {isProcessing ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing Payment...
+                </span>
+              ) : (
+                `Pay ${plan.price}`
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
