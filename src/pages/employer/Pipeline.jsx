@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, Briefcase, CheckCircle, FileText, Filter, GraduationCap, MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CandidateProfileModal from '../../components/CandidateProfileModal';
+import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 
 export default function Pipeline() {
-  const [activeJob, setActiveJob] = useState('Frontend Developer');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   
   // Filter States
@@ -110,7 +110,7 @@ export default function Pipeline() {
         const totalB = b.score + (b.examScore || 0);
         return totalB - totalA;
       });
-  }, [searchQuery, minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels]);
+  }, [searchQuery, minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels, mockCandidates]);
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
@@ -176,12 +176,11 @@ export default function Pipeline() {
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Location District</label>
-              <select value={locationDistrict} onChange={(e) => setLocationDistrict(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500">
+              <select value={locationDistrict} onChange={(e) => setLocationDistrict(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
                 <option value="">All Districts</option>
-                <option value="blantyre">Blantyre</option>
-                <option value="lilongwe">Lilongwe</option>
-                <option value="mzuzu">Mzuzu</option>
-                <option value="zomba">Zomba</option>
+                {MALAWI_DISTRICTS.map(district => (
+                  <option key={district} value={district.toLowerCase()}>{district}</option>
+                ))}
               </select>
             </div>
 
