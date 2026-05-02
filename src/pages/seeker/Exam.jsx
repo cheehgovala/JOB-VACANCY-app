@@ -1,0 +1,507 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export default function Exam() {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes default
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [shuffledQuestions, setShuffledQuestions] = useState([]);
+  const navigate = useNavigate();
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const examDetails = {
+    id: "frontend-basics-1",
+    name: "Frontend Basics Sandbox",
+    passThreshold: 70,
+    timeLimitMinutes: 20
+  };
+
+  const questions = [
+    {
+      id: 1,
+      text: "What is the primary difference between state and props in React?",
+      options: [
+        "State is meant to be passed down; props are meant to be updated",
+        "State is private to a component; props are arguments passed to it",
+        "They are completely identical concepts",
+        "State handles CSS; props handle HTML"
+      ],
+      correct: 1
+    },
+    {
+      id: 2,
+      text: "Which hook should you use to perform side effects in a function component?",
+      options: [
+        "useContext",
+        "useState",
+        "useEffect",
+        "useReducer"
+      ],
+      correct: 2
+    },
+    {
+      id: 3,
+      text: "What does JSX stand for?",
+      options: [
+        "JavaScript XML",
+        "Java Standard Extension",
+        "JavaScript Syntax Extension",
+        "JSON Syntax Extension"
+      ],
+      correct: 0
+    },
+    {
+      id: 4,
+      type: "short-answer",
+      text: "Explain the Virtual DOM in your own words briefly.",
+      maxLength: 500
+    }
+  ];
+
+  // --- ANTI-CHEATING: Environment Lockdown & Proctoring ---
+
+  const logViolation = async (event) => {
+    console.warn(`[Proctoring] Violation detected: ${event}`);
+    // In a fully integrated flow, grab the real sessionId from context or state
+    const sessionId = localStorage.getItem(`exam_session_${examDetails.id}`);
+    if (!sessionId) return;
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/assessments/log-violation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ sessionId, event })
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    // Disable right-click and copy
+    const handleContextMenu = (e) => e.preventDefault();
+    const handleCopy = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("copy", handleCopy);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("copy", handleCopy);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted || submitted) return;
+
+    // Detect tab switching or minimizing
+    const handleVisibilityChange = () => {
+      if (document.hidden) logViolation('TAB_SWITCHED');
+    };
+
+    // Detect clicking outside the browser (blur)
+    const handleBlur = () => {
+      logViolation('WINDOW_BLURRED');
+    };
+
+    // Detect exiting fullscreen
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) logViolation('EXITED_FULLSCREEN');
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, [hasStarted, submitted]);
+
+  useEffect(() => {
+    if (!hasStarted || submitted) {
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+      return;
+    }
+
+    // Start Webcam
+    const startWebcam = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Webcam access denied", err);
+        alert("Webcam access is strictly required to prevent cheating.");
+      }
+    };
+    startWebcam();
+
+    // Take Snapshots every 60 seconds
+    const snapshotInterval = setInterval(async () => {
+      if (videoRef.current && canvasRef.current) {
+        const context = canvasRef.current.getContext('2d');
+        context.drawImage(videoRef.current, 0, 0, 320, 240);
+        const imageBase64 = canvasRef.current.toDataURL('image/jpeg', 0.5); // Compressed JPEG
+        
+        const sessionId = localStorage.getItem(`exam_session_${examDetails.id}`);
+        if (!sessionId) return;
+        
+        try {
+          const token = localStorage.getItem('token');
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/assessments/proctoring-snapshot`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ sessionId, imageBase64 })
+          });
+        } catch (err) {
+          console.error("Failed to upload snapshot", err);
+        }
+      }
+    }, 60000);
+
+    return () => {
+      clearInterval(snapshotInterval);
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [hasStarted, submitted]);
+
+  // Cheating Prevention: Session Tracking & Strict Limits
+  useEffect(() => {
+    // Check if the user already took this exam
+    const previousScore = localStorage.getItem(`exam_score_${examDetails.id}`);
+    if (previousScore !== null) {
+      setScore(parseInt(previousScore, 10));
+      setSubmitted(true);
+      return;
+    }
+
+    // Check if there is an active session
+    const activeStartTime = localStorage.getItem(`exam_start_${examDetails.id}`);
+    if (activeStartTime) {
+      setHasStarted(true);
+      const elapsedSeconds = Math.floor((Date.now() - parseInt(activeStartTime, 10)) / 1000);
+      const remainingSeconds = (examDetails.timeLimitMinutes * 60) - elapsedSeconds;
+      
+      if (remainingSeconds <= 0) {
+        // Time expired while away
+        handleSubmit(true);
+      } else {
+        setTimeLeft(remainingSeconds);
+        // Load shuffled questions from storage if available
+        const savedQuestions = localStorage.getItem(`exam_questions_${examDetails.id}`);
+        if (savedQuestions) setShuffledQuestions(JSON.parse(savedQuestions));
+        else setShuffledQuestions(questions); // Fallback
+        
+        // Load saved answers
+        const savedAnswers = localStorage.getItem(`exam_answers_${examDetails.id}`);
+        if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+      }
+    } else {
+      setTimeLeft(examDetails.timeLimitMinutes * 60);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (submitted || !hasStarted) return;
+    
+    // Save answers to prevent data loss on refresh
+    localStorage.setItem(`exam_answers_${examDetails.id}`, JSON.stringify(answers));
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit(true); // Auto-submit when time expires
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [submitted, hasStarted, answers]);
+
+  const handleStartExam = () => {
+    // Attempt to lock into fullscreen
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn("Fullscreen request failed. User must interact first.", err);
+      });
+    }
+
+    // Cheating Prevention: Randomize Questions
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    setShuffledQuestions(shuffled);
+    
+    // Record Start Time for Session Tracking
+    localStorage.setItem(`exam_start_${examDetails.id}`, Date.now().toString());
+    localStorage.setItem(`exam_questions_${examDetails.id}`, JSON.stringify(shuffled));
+    localStorage.setItem(`exam_session_${examDetails.id}`, "mock_session_" + Date.now()); // Mock ID for demo
+    
+    setHasStarted(true);
+  };
+
+  const handleSelect = (idxOrText) => {
+    setAnswers({ ...answers, [currentQuestion]: idxOrText });
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < shuffledQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleSubmit = (auto = false) => {
+    if (!auto && Object.keys(answers).length < shuffledQuestions.length) {
+      if (!window.confirm("You have unanswered questions. Are you sure you want to submit?")) {
+        return;
+      }
+    }
+    
+    // Record End Time
+    const endTime = Date.now();
+    localStorage.setItem(`exam_end_${examDetails.id}`, endTime.toString());
+    
+    // Calculate score (only MCQ items can be automatically graded here, just mocked logic)
+    let correctCount = 0;
+    let autoGradableCount = 0;
+    shuffledQuestions.forEach((q, i) => {
+      if (q.type !== 'short-answer') {
+        autoGradableCount++;
+        // Need to find original question to get correct answer as we shuffled
+        const origQ = questions.find(orig => orig.id === q.id);
+        if (origQ && answers[i] === origQ.correct) correctCount++;
+      }
+    });
+    
+    const finalScore = Math.round((correctCount / autoGradableCount) * 100) || 0;
+    setScore(finalScore);
+    
+    // Cheating Prevention: Prevent Retakes
+    localStorage.setItem(`exam_score_${examDetails.id}`, finalScore.toString());
+    // Cleanup session to avoid resuming
+    localStorage.removeItem(`exam_start_${examDetails.id}`);
+    localStorage.removeItem(`exam_questions_${examDetails.id}`);
+    localStorage.removeItem(`exam_answers_${examDetails.id}`);
+    localStorage.removeItem(`exam_session_${examDetails.id}`);
+    
+    // Exit Fullscreen
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log(err));
+    }
+    
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    const passed = score >= 70;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-gray-100"
+        >
+          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 mx-auto ${passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+            {passed ? <CheckCircle className="w-10 h-10" /> : <AlertTriangle className="w-10 h-10" />}
+          </div>
+          
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Exam Submitted!</h1>
+          <p className="text-gray-500 mb-8">Your results have been automatically attached to your application.</p>
+          
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 mb-8">
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Your Score</h2>
+            <div className={`text-6xl font-black ${passed ? 'text-green-600' : 'text-red-600'}`}>
+              {score}%
+            </div>
+            <p className={`mt-2 font-semibold ${passed ? 'text-green-700' : 'text-red-700'}`}>
+              {passed ? "Congratulations! You passed the minimum threshold." : "Unfortunately, you did not meet the required threshold."}
+            </p>
+          </div>
+          
+          <button 
+            onClick={() => navigate('/seeker/dashboard')}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-md"
+          >
+            Return to Dashboard
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const isWarning = timeLeft <= 300; // Under 5 minutes
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl max-w-lg w-full border border-gray-100"
+        >
+          <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mb-6">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">{examDetails.name}</h1>
+          <p className="text-gray-500 mb-8">Please read the instructions carefully before starting.</p>
+          
+          <div className="space-y-4 mb-8">
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <span className="text-gray-600 font-medium">Questions</span>
+              <span className="font-bold text-gray-900">{questions.length}</span>
+            </div>
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <span className="text-gray-600 font-medium">Time Limit</span>
+              <span className="font-bold text-gray-900">{examDetails.timeLimitMinutes} Minutes</span>
+            </div>
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <span className="text-gray-600 font-medium">Passing Score</span>
+              <span className="font-bold text-gray-900">{examDetails.passThreshold}%</span>
+            </div>
+          </div>
+          
+          <div className="bg-amber-50 rounded-xl p-4 flex gap-3 mb-8 border border-amber-100 text-amber-800">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-medium">This exam can only be attempted once. Ensure you have a stable internet connection and enough time before starting.</p>
+          </div>
+          
+          <button 
+            onClick={handleStartExam}
+            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary-500/30 text-lg"
+          >
+            Start Exam
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col select-none">
+      {/* Hidden Media Elements for Proctoring */}
+      <video ref={videoRef} autoPlay playsInline muted className="hidden" />
+      <canvas ref={canvasRef} width="320" height="240" className="hidden" />
+
+      {/* Exam Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+             <ShieldCheck className="w-6 h-6 text-primary-600" />
+             <span className="font-bold text-gray-900">{examDetails.name}</span>
+          </div>
+          
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold font-mono text-lg border ${isWarning ? 'bg-red-50 text-red-700 border-red-200 animate-pulse' : 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+            <Clock className="w-5 h-5" /> {formatTime(timeLeft)}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+        {/* Progress */}
+        <div className="mb-8 flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <span className="font-bold text-gray-700">Question {currentQuestion + 1} of {shuffledQuestions.length}</span>
+          <div className="w-1/2 bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentQuestion + 1) / shuffledQuestions.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Question Area */}
+        {shuffledQuestions.length > 0 && (
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentQuestion}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-lg flex flex-col justify-center"
+            >
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-10 leading-relaxed text-center">
+                {shuffledQuestions[currentQuestion].text}
+              </h2>
+              
+              <div className="space-y-4 max-w-2xl mx-auto w-full">
+                {shuffledQuestions[currentQuestion].type === 'short-answer' ? (
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      className="w-full p-4 border-2 border-gray-200 rounded-2xl resize-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none"
+                      rows={6}
+                      placeholder="Type your answer here..."
+                      maxLength={shuffledQuestions[currentQuestion].maxLength}
+                      value={answers[currentQuestion] || ""}
+                      onChange={(e) => handleSelect(e.target.value)}
+                    />
+                    <div className="text-right text-sm text-gray-400 font-medium">
+                      {(answers[currentQuestion] || "").length} / {shuffledQuestions[currentQuestion].maxLength} characters
+                    </div>
+                  </div>
+                ) : (
+                  shuffledQuestions[currentQuestion].options.map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelect(idx)}
+                    className={`w-full text-left p-6 rounded-2xl border-2 transition-all font-semibold text-lg flex items-center gap-4 group ${
+                      answers[currentQuestion] === idx 
+                        ? 'border-primary-600 bg-primary-50 text-primary-900 shadow-sm' 
+                        : 'border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      answers[currentQuestion] === idx 
+                        ? 'border-primary-600 border-8' 
+                        : 'border-gray-300 group-hover:border-primary-400'
+                    }`}></div>
+                    {option}
+                  </button>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        )}
+
+        {/* Footer Navigation */}
+        <footer className="mt-8 flex justify-end items-center">
+          {currentQuestion < shuffledQuestions.length - 1 ? (
+            <button 
+              onClick={nextQuestion}
+               className="bg-gray-900 hover:bg-gray-800 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg"
+            >
+              Next Question
+            </button>
+          ) : (
+             <button 
+              onClick={() => handleSubmit(false)}
+               className="bg-primary-600 hover:bg-primary-500 text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/30"
+            >
+              Submit Exam
+            </button>
+          )}
+        </footer>
+      </main>
+    </div>
+  );
+}
