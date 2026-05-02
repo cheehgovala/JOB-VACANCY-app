@@ -1,0 +1,413 @@
+import { AnimatePresence, motion } from 'framer-motion';
+import { Briefcase, Building2, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { MALAWI_DISTRICTS } from '../../utils/constants.js';
+
+export default function JobSearch() {
+  const { user, saveJob, applyToJob, mockJobs } = useAuth();
+  const seekerSkills = user?.seekerProfile?.skills?.toLowerCase() || '';
+  const savedJobIds = user?.savedJobs || [];
+  const appliedJobIds = user?.appliedJobs || [];
+
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedJob, setSelectedJob] = useState(null);
+  
+  const [filters, setFilters] = useState({
+    location: [],
+    type: [],
+    experience: [],
+    industry: [],
+    salary: []
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+
+  const jobs = [
+    { 
+      id: 1, 
+      title: 'Senior Frontend Developer', 
+      company: 'Tech Hub Lilongwe', 
+      location: 'Lilongwe', 
+      salary: 'MWK 1.5M - 2.5M', 
+      type: 'Full-time',
+      experience: 'Senior',
+      industry: 'Technology',
+      match: 92,
+      posted: '2 days ago',
+      hasAssessment: true,
+      isPremium: true,
+      skills: ['reactjs', 'frontend', 'javascript', 'css'],
+      description: 'We are looking for an experienced Senior Frontend Developer to lead our UI engineering team. You will be responsible for building complex interfaces using ReactJS, optimizing application performance, and mentoring junior developers. Requires at least 5 years of experience.'
+    },
+    { 
+      id: 2, 
+      title: 'UX/UI Designer', 
+      company: 'Malawi Digital Solutions', 
+      location: 'Blantyre', 
+      salary: 'MWK 1.2M - 1.8M', 
+      type: 'Contract',
+      experience: 'Mid Level',
+      industry: 'Design',
+      match: 85,
+      posted: '1 week ago',
+      hasAssessment: false,
+      isPremium: false,
+      skills: ['figma', 'design', 'ui', 'ux'],
+      description: 'Join our creative agency to design engaging digital experiences for our corporate clients. You should be proficient in Figma, have a strong portfolio demonstrating user-centric design principles, and be able to collaborate closely with developers.'
+    },
+    { 
+      id: 3, 
+      title: 'Backend Engineer', 
+      company: 'National Bank of Malawi', 
+      location: 'Blantyre', 
+      salary: 'MWK 2.5M - 3.5M', 
+      type: 'Full-time',
+      experience: 'Mid Level',
+      industry: 'Finance',
+      match: 78,
+      posted: '3 days ago',
+      hasAssessment: true,
+      isPremium: true,
+      skills: ['nodejs', 'backend', 'sql', 'api'],
+      description: 'The National Bank of Malawi is expanding its digital banking team. We need a Backend Engineer with strong Node.js and SQL experience to build scalable and secure financial APIs. Experience in the banking sector is a plus.'
+    },
+    { 
+      id: 4, 
+      title: 'Product Manager', 
+      company: 'Airtel Malawi', 
+      location: 'Lilongwe', 
+      salary: 'MWK 3.0M - 4.5M', 
+      type: 'Full-time',
+      experience: 'Executive',
+      industry: 'Telecommunications',
+      match: 65,
+      posted: 'Just now',
+      hasAssessment: true,
+      isPremium: true,
+      skills: ['project management', 'agile', 'leadership', 'strategy'],
+      description: 'Lead the continuous evolution of our mobile platform products. The ideal candidate will have extensive experience in agile methodologies, cross-functional team leadership, and a track record of successful product launches in the telecom industry.'
+    }
+  ];
+
+  const handleFilterChange = (category, value) => {
+    setFilters(prev => {
+      const current = prev[category];
+      if (current.includes(value)) {
+        return { ...prev, [category]: current.filter(item => item !== value) };
+      } else {
+        return { ...prev, [category]: [...current, value] };
+      }
+    });
+  };
+
+  const handleSaveBtn = () => {
+    if (selectedJob) saveJob(selectedJob.id);
+  };
+
+  const handleApplyBtn = () => {
+    if (selectedJob) {
+      const res = applyToJob(selectedJob);
+      if (!res.success) {
+        alert(res.message);
+      } else {
+        alert('Application submitted successfully! It is now visible to the employer.');
+      }
+    }
+  };
+
+  const allJobs = useMemo(() => {
+    return [...(mockJobs || []), ...jobs];
+  }, [mockJobs]);
+
+  const filteredJobs = useMemo(() => {
+    return allJobs.filter(job => {
+      // Free text search
+      if (searchQuery && !job.title.toLowerCase().includes(searchQuery.toLowerCase()) && !job.company.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (searchLocation && !job.location.toLowerCase().includes(searchLocation.toLowerCase())) return false;
+
+      // Sidebar filters
+      if (filters.location.length > 0 && !filters.location.includes(job.location)) return false;
+      if (filters.type.length > 0 && !filters.type.includes(job.type)) return false;
+      if (filters.experience.length > 0 && !filters.experience.includes(job.experience)) return false;
+      if (filters.industry.length > 0 && !filters.industry.includes(job.industry)) return false;
+      if (filters.salary.length > 0 && !filters.salary.includes(job.salary)) return false;
+
+      // Tabs Logic
+      if (activeTab === 'recommended') {
+        if (seekerSkills) {
+          // Check if any of the job's skills exist in the user's skill string
+          const matchesSkill = job.skills.some(skill => seekerSkills.includes(skill.toLowerCase()));
+          return matchesSkill || job.match >= 80;
+        }
+        return job.match >= 80;
+      }
+      if (activeTab === 'saved') {
+        return savedJobIds.includes(job.id);
+      }
+
+      return true;
+    });
+  }, [allJobs, filters, activeTab, searchQuery, searchLocation, seekerSkills, savedJobIds]);
+
+  return (
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 relative">
+      {/* Sidebar Filters */}
+      <div className="w-full md:w-64 flex-shrink-0 space-y-6">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Filter className="w-5 h-5 text-primary-600" /> Filters
+          </h2>
+          
+          <div className="space-y-6 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Job Type</h3>
+              <div className="space-y-2">
+                {['Full-time', 'Part-time', 'Contract', 'Internship'].map((type) => (
+                  <label key={type} className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked={filters.type.includes(type)} onChange={() => handleFilterChange('type', type)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Experience Level</h3>
+              <div className="space-y-2">
+                {['Entry Level', 'Mid Level', 'Senior', 'Executive'].map((level) => (
+                  <label key={level} className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked={filters.experience.includes(level)} onChange={() => handleFilterChange('experience', level)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{level}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Industry</h3>
+              <div className="space-y-2">
+                {['Technology', 'Design', 'Finance', 'Telecommunications'].map((ind) => (
+                  <label key={ind} className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked={filters.industry.includes(ind)} onChange={() => handleFilterChange('industry', ind)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{ind}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Salary Range</h3>
+              <div className="space-y-2">
+                {['Competitive', 'MWK 1.2M - 1.8M', 'MWK 1.5M - 2.5M', 'MWK 2.5M - 3.5M', 'MWK 3.0M - 4.5M'].map((sal) => (
+                  <label key={sal} className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked={filters.salary.includes(sal)} onChange={() => handleFilterChange('salary', sal)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{sal}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
+        {/* Search Bar */}
+        <div className="bg-white p-2 sm:p-4 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Job title, keywords, or company" 
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none"
+              />
+            </div>
+            <div className="flex-1 relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+              <select 
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none appearance-none cursor-pointer"
+              >
+                <option value="">All Districts</option>
+                <option value="Remote">Remote</option>
+                {MALAWI_DISTRICTS.map(district => (
+                  <option key={district} value={district}>{district}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-gray-200 pb-px">
+          <button 
+            onClick={() => setActiveTab('all')}
+            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'all' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            All Jobs
+          </button>
+          <button 
+            onClick={() => setActiveTab('recommended')}
+            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'recommended' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Smart Matches
+            <span className="ml-2 bg-primary-100 text-primary-700 py-0.5 px-2 rounded-full text-xs">New</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('saved')}
+            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'saved' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            Saved Jobs
+          </button>
+        </div>
+
+        {/* Job Listings Layout */}
+        <div className="grid grid-cols-1 gap-4">
+          {filteredJobs.length === 0 ? (
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center text-gray-500">
+               No jobs match your criteria. Try loosening your filters.
+            </div>
+          ) : (
+            filteredJobs.map((job, index) => (
+            <motion.div 
+              key={job.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => setSelectedJob(job)}
+              className={`bg-white border text-left rounded-2xl p-5 hover:shadow-md cursor-pointer transition-all group flex flex-col sm:flex-row gap-6 relative overflow-hidden ${job.isPremium ? 'border-yellow-400 bg-yellow-50/10' : 'border-gray-100 hover:border-primary-200'}`}
+            >
+              {activeTab === 'recommended' && <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>}
+              {job.isPremium && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900"/> FEATURED</div>}
+              
+              <div className={`w-16 h-16 rounded-xl border flex items-center justify-center flex-shrink-0 ${job.isPremium ? 'bg-yellow-100 border-yellow-200' : 'bg-gray-50 border-gray-100'}`}>
+                {job.isPremium ? <Building2 className="w-8 h-8 text-yellow-600" /> : <Briefcase className="w-8 h-8 text-gray-400 group-hover:text-primary-500 transition-colors" />}
+              </div>
+
+              <div className="flex-1 flex flex-col justify-between pt-1">
+                <div>
+                  <div className="flex justify-between items-start mb-1 pr-16 sm:pr-0">
+                    <h3 className={`text-lg font-bold group-hover:text-primary-700 transition-colors ${job.isPremium ? 'text-yellow-900' : 'text-gray-900'}`}>{job.title}</h3>
+                    {activeTab === 'recommended' && (
+                      <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                        {job.match}% Match
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">{job.company}</p>
+                  
+                  <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-2">
+                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg"><MapPin className="w-4 h-4"/> {job.location}</span>
+                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg"><Briefcase className="w-4 h-4"/> {job.type}</span>
+                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg">{job.salary}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span>Posted {job.posted}</span>
+                    {job.hasAssessment && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-primary-600 font-medium">
+                          <CheckCircle className="w-3.5 h-3.5" /> Assessment Required
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )))}
+        </div>
+      </div>
+
+      {/* Job Details Modal */}
+      <AnimatePresence>
+        {selectedJob && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
+            onClick={() => setSelectedJob(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className={`p-6 border-b ${selectedJob.isPremium ? 'bg-yellow-50 border-yellow-100' : 'bg-gray-50 border-gray-100'} flex justify-between items-start relative`}>
+                {selectedJob.isPremium && <div className="absolute top-0 right-6 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-b-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900"/> FEATURED</div>}
+                <div className="flex gap-4 items-center mt-4 sm:mt-0">
+                  <div className={`w-16 h-16 rounded-xl border flex items-center justify-center bg-white shadow-sm flex-shrink-0 ${selectedJob.isPremium ? 'border-yellow-200' : 'border-gray-100'}`}>
+                    {selectedJob.isPremium ? <Building2 className="w-8 h-8 text-yellow-600" /> : <Briefcase className="w-8 h-8 text-primary-600" />}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 leading-tight pr-8">{selectedJob.title}</h2>
+                    <p className="text-primary-600 font-medium">{selectedJob.company}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedJob(null)} className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors">
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto hidden-scrollbar flex-1">
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><MapPin className="w-4 h-4"/> {selectedJob.location}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><Briefcase className="w-4 h-4"/> {selectedJob.type}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.salary}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.experience}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.industry}</span>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Job Description</h3>
+                  <p className="text-gray-600 leading-relaxed">{selectedJob.description}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Required Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.map((skill, idx) => (
+                      <span key={idx} className="bg-primary-50 text-primary-700 px-3 py-1 rounded-lg text-sm font-medium border border-primary-100">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-4">
+                <button 
+                  onClick={handleSaveBtn}
+                  disabled={savedJobIds.includes(selectedJob.id)}
+                  className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-sm transition-colors border ${savedJobIds.includes(selectedJob.id) ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'}`}
+                >
+                  {savedJobIds.includes(selectedJob.id) ? 'Saved' : 'Save for Later'}
+                </button>
+                <button 
+                  onClick={handleApplyBtn}
+                  disabled={appliedJobIds.includes(selectedJob.id)}
+                  className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${appliedJobIds.includes(selectedJob.id) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
+                >
+                  {appliedJobIds.includes(selectedJob.id) ? 'Applied' : 'Apply Now'} <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
