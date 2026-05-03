@@ -2,14 +2,47 @@ import { motion } from 'framer-motion';
 import { Briefcase, Users, FileText, CheckCircle, Clock, Plus, BarChart2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
+import api from '../../api/axios';
 
 export default function EmployerDashboard() {
-  const { mockApplications } = useAuth();
+  const { user } = useAuth();
+  const [applications, setApplications] = useState([]);
+  const [statsData, setStatsData] = useState({
+    activeJobs: 0,
+    totalApps: 0,
+    shortlisted: 0,
+    pending: 0
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const { data } = await api.get('/applications/employer-all');
+        setApplications(data);
+        
+        // Calculate basic stats
+        const totalApps = data.length;
+        const shortlisted = data.filter(a => a.status === 'Shortlisted').length;
+        const pending = data.filter(a => a.status === 'Pending').length;
+        
+        setStatsData(prev => ({
+          ...prev,
+          totalApps,
+          shortlisted,
+          pending
+        }));
+      } catch (err) {
+        console.error('Failed to fetch applications', err);
+      }
+    };
+    fetchDashboardData();
+  }, []);
   const stats = [
-    { name: 'Active Jobs', value: '3', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { name: 'Total Applications', value: '142', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-    { name: 'Shortlisted Candidates', value: '28', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100' },
-    { name: 'Pending Assessments', value: '12', icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { name: 'Active Jobs', value: statsData.activeJobs || '3', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { name: 'Total Applications', value: statsData.totalApps.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { name: 'Shortlisted Candidates', value: statsData.shortlisted.toString(), icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100' },
+    { name: 'Pending Assessments', value: statsData.pending.toString(), icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
   ];
 
   return (
@@ -69,19 +102,19 @@ export default function EmployerDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {mockApplications && mockApplications.length > 0 ? mockApplications.map((app, i) => (
+                  {applications && applications.length > 0 ? applications.map((app, i) => (
                     <tr key={i} className="hover:bg-gray-50/50 transition-colors cursor-pointer">
                       <td className="py-4 pr-4">
-                        <p className="font-bold text-gray-900">{app.applicantName}</p>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Briefcase className="w-3.5 h-3.5"/> Applied for: {app.jobTitle}</p>
+                        <p className="font-bold text-gray-900">{app.applicantId?.name || app.applicantName || 'Applicant'}</p>
+                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Briefcase className="w-3.5 h-3.5"/> Applied for: {app.jobId?.title || app.jobTitle}</p>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-sm">
-                          {app.applicantProfile?.completeness || 0}%
+                          {app.applicantId?.seekerProfile?.completeness || app.applicantProfile?.completeness || 0}%
                         </span>
                       </td>
                       <td className="py-4 px-4 text-center text-sm font-medium text-gray-600">
-                        {new Date(app.date).toLocaleDateString()}
+                        {new Date(app.appliedAt || app.date).toLocaleDateString()}
                       </td>
                       <td className="py-4 pl-4 text-right">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">

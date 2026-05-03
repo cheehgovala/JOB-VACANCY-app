@@ -1,11 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Briefcase, Building2, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 
 export default function JobSearch() {
-  const { user, saveJob, applyToJob, mockJobs } = useAuth();
+  const { user, saveJob, applyToJob } = useAuth();
   const seekerSkills = user?.seekerProfile?.skills?.toLowerCase() || '';
   const savedJobIds = user?.savedJobs || [];
   const appliedJobIds = user?.appliedJobs || [];
@@ -23,6 +24,19 @@ export default function JobSearch() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const [apiJobs, setApiJobs] = useState([]);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const { data } = await api.get('/jobs');
+        setApiJobs(data || []);
+      } catch (err) {
+        console.error('Failed to fetch jobs', err);
+      }
+    };
+    fetchJobs();
+  }, []);
 
   const jobs = [
     { 
@@ -118,8 +132,14 @@ export default function JobSearch() {
   };
 
   const allJobs = useMemo(() => {
-    return [...(mockJobs || []), ...jobs];
-  }, [mockJobs]);
+    // Merge fallback jobs and API jobs, ensuring no duplicates by ID
+    const apiJobMap = new Map(apiJobs.map(j => [j._id || j.id, j]));
+    const merged = [...apiJobs];
+    for (const job of jobs) {
+      if (!apiJobMap.has(job.id)) merged.push(job);
+    }
+    return merged;
+  }, [apiJobs]);
 
   const filteredJobs = useMemo(() => {
     return allJobs.filter(job => {
@@ -295,13 +315,13 @@ export default function JobSearch() {
                 <div>
                   <div className="flex justify-between items-start mb-1 pr-16 sm:pr-0">
                     <h3 className={`text-lg font-bold group-hover:text-primary-700 transition-colors ${job.isPremium ? 'text-yellow-900' : 'text-gray-900'}`}>{job.title}</h3>
-                    {activeTab === 'recommended' && (
+                    {activeTab === 'recommended' && job.match && (
                       <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
                         {job.match}% Match
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-600 text-sm mb-3">{job.company}</p>
+                  <p className="text-gray-600 text-sm mb-3">{job.company || 'Unknown Company'}</p>
                   
                   <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-2">
                     <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg"><MapPin className="w-4 h-4"/> {job.location}</span>

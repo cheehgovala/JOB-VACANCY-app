@@ -1,198 +1,160 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api/axios';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [mockApplications, setMockApplications] = useState(() => {
-    const storedApps = localStorage.getItem('talent_mw_apps');
-    return storedApps ? JSON.parse(storedApps) : [];
-  });
+  const [loading, setLoading] = useState(true);
 
-  const [mockJobs, setMockJobs] = useState(() => {
-    const storedJobs = localStorage.getItem('talent_mw_jobs');
-    return storedJobs ? JSON.parse(storedJobs) : [];
-  });
-
-  const [mockUsers, setMockUsers] = useState(() => {
-    const storedUsers = localStorage.getItem('talent_mw_users');
-    return storedUsers ? JSON.parse(storedUsers) : [];
-  });
-
-  // Initialize from local storage
   useEffect(() => {
-    const storedUser = localStorage.getItem('talent_mw_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('talent_mw_token');
+      if (token) {
+        try {
+          const res = await api.get('/auth/profile');
+          setUser(res.data.user || res.data); 
+        } catch (e) {
+          console.error('Failed to fetch user profile', e);
+          localStorage.removeItem('talent_mw_token');
+        }
       }
-    }
+      setLoading(false);
+    };
+    fetchProfile();
   }, []);
 
-  // Sync mockApplications to localStorage
-  useEffect(() => {
-    localStorage.setItem('talent_mw_apps', JSON.stringify(mockApplications));
-  }, [mockApplications]);
-
-  useEffect(() => {
-    localStorage.setItem('talent_mw_jobs', JSON.stringify(mockJobs));
-  }, [mockJobs]);
-
-  useEffect(() => {
-    localStorage.setItem('talent_mw_users', JSON.stringify(mockUsers));
-  }, [mockUsers]);
-  
-  const registerUser = (userData) => {
-    if (mockUsers.some(u => u.email === userData.email)) {
-      return { success: false, message: 'Email already exists' };
+  const registerUser = async (userData) => {
+    try {
+      const payload = {
+        name: userData.name || (userData.firstName + ' ' + userData.lastName),
+        email: userData.email,
+        phone: userData.phone || '0000000000',
+        password: userData.password,
+        role: userData.role || 'seeker'
+      };
+      const res = await api.post('/auth/register', payload);
+      // Backend returns requireOTP and email if OTP is sent
+      if (res.data.token) {
+        localStorage.setItem('talent_mw_token', res.data.token);
+        setUser(res.data.user || res.data);
+      }
+      return { 
+        success: true, 
+        user: res.data.user || res.data, 
+        requireOTP: res.data.requireOTP, 
+        email: res.data.email,
+        message: res.data.message 
+      };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.error || 'Registration failed' };
     }
-    const newUser = {
-      id: Math.random().toString(36).substring(7),
-      ...userData,
-      hasActiveSubscription: false,
-      subscriptionPlan: null,
-      subscriptionExpiry: null,
-      savedJobs: [],
-      appliedJobs: [],
-      postedJobs: [],
-      profilePicture: null
-    };
-    setMockUsers(prev => [...prev, newUser]);
-    setUser(newUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(newUser));
-    return { success: true, user: newUser };
   };
 
-  const login = (email, password) => {
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('talent_mw_user', JSON.stringify(foundUser));
-      return { success: true, user: foundUser };
+  const verifyOTP = async (email, otp) => {
+    try {
+      const res = await api.post('/auth/verify-otp', { email, otp });
+      if (res.data.token) {
+        localStorage.setItem('talent_mw_token', res.data.token);
+        setUser(res.data.user || res.data);
+        return { success: true, user: res.data.user || res.data };
+      }
+      return { success: false, message: 'Invalid OTP.' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.error || 'Verification failed.' };
     }
-    
-    // Fallback demo behavior for testing
-    if (email.includes('employer')) {
-      const demoUser = {
-        id: 'demo-emp', role: 'employer', email, hasActiveSubscription: true, savedJobs: [], appliedJobs: [], postedJobs: []
-      };
-      setUser(demoUser);
-      localStorage.setItem('talent_mw_user', JSON.stringify(demoUser));
-      return { success: true, user: demoUser };
-    }
-    if (email.includes('seeker') || email === 'demo@demo.com') {
-      const demoUser = {
-        id: 'demo-seek', role: 'seeker', email, hasActiveSubscription: true, savedJobs: [], appliedJobs: [], postedJobs: []
-      };
-      setUser(demoUser);
-      localStorage.setItem('talent_mw_user', JSON.stringify(demoUser));
-      return { success: true, user: demoUser };
-    }
+  };
 
-    return { success: false, message: 'Invalid credentials. Please make sure you are registered.' };
+  const login = async (email, password) => {
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      if (res.data.token) {
+        localStorage.setItem('talent_mw_token', res.data.token);
+        setUser(res.data.user || res.data);
+        return { success: true, user: res.data.user || res.data };
+      }
+      return { success: false, message: 'Invalid credentials.' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.error || 'Invalid credentials.' };
+    }
   };
   
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('talent_mw_user');
+    localStorage.removeItem('talent_mw_token');
   };
 
-  const updateSubscription = (plan, durationDays) => {
+  const updateSubscription = async (plan, durationDays) => {
     if (!user) return;
-    
-    // Calculate expiry
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + durationDays);
-
-    const updatedUser = {
-      ...user,
-      hasActiveSubscription: true,
-      subscriptionPlan: plan,
-      subscriptionExpiry: expiryDate.toISOString()
-    };
-    
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+    try {
+      const res = await api.put('/auth/subscription', { plan, durationDays });
+      setUser(res.data.user);
+    } catch (error) {
+      console.error('Subscription update failed', error);
+    }
   };
 
-  const updateSeekerProfile = (profileData, completeness) => {
+  const updateSeekerProfile = async (profileData, completeness) => {
     if (!user) return;
-    const updatedUser = {
-      ...user,
-      seekerProfile: {
-        ...profileData,
-        completeness
+    try {
+      const payload = { seekerProfile: { ...profileData, completeness } };
+      const res = await api.put('/auth/profile', payload);
+      setUser(res.data.user);
+    } catch (error) {
+      console.error('Profile update failed', error);
+    }
+  };
+
+  const updateProfilePicture = async (base64Image) => {
+     try {
+         const res = await fetch(base64Image);
+         const blob = await res.blob();
+         const formData = new FormData();
+         formData.append('image', blob, 'profile.jpg');
+         
+         const response = await api.post('/auth/profile-picture', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+         });
+         setUser(response.data.user);
+     } catch (error) {
+         console.error('Profile picture update failed', error);
+     }
+  };
+
+  const saveJob = async (jobId) => {
+      try {
+          await api.post(`/jobs/${jobId}/save`);
+          const res = await api.get('/auth/profile');
+          setUser(res.data.user || res.data);
+      } catch (error) {
+          console.error('Failed to save job', error);
       }
-    };
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
-  };
-  
-  const saveJob = (jobId) => {
-    if (!user || user.role !== 'seeker') return;
-    const savedJobs = user.savedJobs || [];
-    if (savedJobs.includes(jobId)) return;
-    
-    const updatedUser = { ...user, savedJobs: [...savedJobs, jobId] };
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
   };
 
-  const applyToJob = (job) => {
-    if (!user || user.role !== 'seeker') return { success: false, message: 'Must be logged in as seeker' };
-    if (!user.hasActiveSubscription) return { success: false, message: 'Subscription required' };
-    
-    const appliedJobs = user.appliedJobs || [];
-    if (appliedJobs.includes(job.id)) return { success: false, message: 'Already applied' };
-    
-    // Create new application
-    const newApp = {
-      id: Math.random().toString(36).substring(7),
-      jobId: job.id,
-      jobTitle: job.title,
-      applicantId: user.id,
-      applicantName: user.seekerProfile?.personal?.fullName || 'Anonymous Seeker',
-      applicantProfile: user.seekerProfile || {},
-      status: 'Pending',
-      date: new Date().toISOString()
-    };
-    
-    setMockApplications(prev => [...prev, newApp]);
-    
-    const updatedUser = { ...user, appliedJobs: [...appliedJobs, job.id] };
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
-    return { success: true, message: 'Application submitted perfectly' };
+  const applyToJob = async (job) => {
+      try {
+          const jobId = job._id || job.id;
+          const res = await api.post(`/applications/${jobId}`);
+          return { success: true, message: 'Application submitted perfectly' };
+      } catch (error) {
+          return { success: false, message: error.response?.data?.error || 'Failed to apply' };
+      }
   };
 
-  const publishJob = (jobData) => {
-    if (!user || user.role !== 'employer') return;
-    
-    setMockJobs(prev => [jobData, ...prev]);
-    
-    const updatedUser = {
-      ...user,
-      postedJobs: [...(user.postedJobs || []), jobData]
-    };
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
+  const publishJob = async (jobData) => {
+      try {
+          await api.post('/jobs', jobData);
+      } catch (error) {
+          console.error('Failed to publish job', error);
+      }
   };
 
-  const updateProfilePicture = (base64Image) => {
-    if (!user) return;
-    const updatedUser = {
-      ...user,
-      profilePicture: base64Image
-    };
-    setUser(updatedUser);
-    localStorage.setItem('talent_mw_user', JSON.stringify(updatedUser));
-  };
-  
   return (
-    <AuthContext.Provider value={{ user, login, logout, registerUser, updateSubscription, updateSeekerProfile, saveJob, applyToJob, mockApplications, mockJobs, publishJob, updateProfilePicture }}>
-      {children}
+    <AuthContext.Provider value={{ 
+        user, login, logout, registerUser, verifyOTP, updateSubscription, 
+        updateSeekerProfile, saveJob, applyToJob, publishJob, updateProfilePicture, loading 
+    }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 }

@@ -1,11 +1,11 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CheckCircle, ChevronLeft, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { getPhoneError } from '../../utils/validation.js';
+import api from '../../api/axios.js';
 
 const PAYMENT_METHODS = [
-  { id: 'tnm_mpamba', name: 'TNM Mpamba', icon: Smartphone, color: 'text-green-500', bg: 'bg-green-50' }
+  { id: 'tnm_mpamba', name: 'TNM Mpamba / PayChangu', icon: Smartphone, color: 'text-green-500', bg: 'bg-green-50' }
 ];
 
 const PLAN_DETAILS = {
@@ -20,32 +20,26 @@ export default function Payment() {
   const plan = PLAN_DETAILS[planId] || PLAN_DETAILS['seeker_basic'];
   
   const [method, setMethod] = useState(PAYMENT_METHODS[0].id);
-  const [account, setAccount] = useState('');
-  const [phoneError, setPhoneError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
-  const handleAccountChange = (e) => {
-    setAccount(e.target.value);
-    if (phoneError) {
-      setPhoneError('');
-    }
-  };
-
-  const handlePay = (e) => {
+  const handlePay = async (e) => {
     e.preventDefault();
-    const error = getPhoneError(account);
-    if (error) {
-      setPhoneError(error);
-      return;
-    }
     setIsProcessing(true);
     
-    // Simulate payment delay
-    setTimeout(() => {
+    try {
+      const response = await api.post('/payments/init', { planId });
+      if (response.data.success && response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      } else {
+        alert(response.data.message || 'Failed to initialize payment');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Payment Error:', error);
+      alert(error.response?.data?.message || 'An error occurred while initializing payment');
       setIsProcessing(false);
-      navigate(`/payment-success?plan=${planId}`);
-    }, 2000);
+    }
   };
 
   return (
@@ -107,49 +101,9 @@ export default function Payment() {
               ))}
             </div>
 
-            <AnimatePresence mode="popLayout">
-              {method !== 'nbm_bank' ? (
-                <motion.div
-                  key="mobile"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={account}
-                    onChange={handleAccountChange}
-                    className={`focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border ${phoneError ? 'border-red-500' : ''}`}
-                    placeholder="e.g. 088X XXX XXX or 08X XXX XXX"
-                  />
-                  {phoneError && <p className="mt-1 text-sm text-red-600">{phoneError}</p>}
-                  <p className="mt-2 text-xs text-gray-500">A prompt will be sent to your phone to enter your PIN.</p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="bank"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bank Account Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={account}
-                    onChange={(e) => setAccount(e.target.value)}
-                    className="focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 sm:text-sm border-gray-300 rounded-xl bg-white/50 border"
-                    placeholder="Enter your NBM account number"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-800">
+              <p>You will be securely redirected to PayChangu to complete your TNM Mpamba payment.</p>
+            </div>
 
             <button
               type="submit"
@@ -172,7 +126,7 @@ export default function Payment() {
             </button>
             
             <p className="text-xs text-gray-500 text-center mt-4">
-              <span className="text-red-500">*</span> Required field
+              Secure payments powered by PayChangu
             </p>
           </form>
         </div>

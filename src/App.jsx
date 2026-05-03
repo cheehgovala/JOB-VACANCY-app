@@ -7,6 +7,7 @@ import SubscriptionGuard from './components/SubscriptionGuard';
 import Home from './pages/public/Home';
 import Login from './pages/public/Login';
 import Register from './pages/public/Register';
+import VerifyOTP from './pages/public/VerifyOTP';
 import Subscription from './pages/public/Subscription';
 import Payment from './pages/public/Payment';
 import PaymentSuccess from './pages/public/PaymentSuccess';
@@ -32,6 +33,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="verify-otp" element={<VerifyOTP />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="payment" element={<Payment />} />
         <Route path="payment-success" element={<PaymentSuccess />} />

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 import { getEmailError, getPhoneError } from '../../utils/validation.js';
+import api from '../../api/axios';
 
 export default function CVBuilder() {
   const navigate = useNavigate();
@@ -35,13 +36,11 @@ export default function CVBuilder() {
 
   const uploadFile = async (file) => {
     const dataForm = new FormData();
-    dataForm.append('image', file); // Use 'image' to match backend middleware upload.single('image')
+    dataForm.append('image', file);
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
-        method: 'POST',
-        body: dataForm
+      const { data } = await api.post('/upload', dataForm, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const data = await res.json();
       return data.record?.url || '';
     } catch (error) {
       console.error('Upload failed:', error);

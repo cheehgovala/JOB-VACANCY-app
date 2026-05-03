@@ -52,18 +52,22 @@ export default function Register() {
     return !Object.values(newErrors).some(error => error);
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
-    const result = registerUser({
+    const result = await registerUser({
       ...formData,
       role
     });
 
     if (result.success) {
-      navigate('/subscription');
+      if (result.requireOTP) {
+        navigate(`/verify-otp?email=${encodeURIComponent(result.email || formData.email)}`);
+      } else {
+        navigate('/subscription');
+      }
     } else {
       alert(result.message);
     }

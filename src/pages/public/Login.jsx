@@ -19,14 +19,14 @@ export default function Login() {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     const error = getEmailError(email);
     if (error) {
       setEmailError(error);
       return;
     }
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       if (!result.user.hasActiveSubscription) {
         navigate('/subscription');

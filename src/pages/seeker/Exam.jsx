@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 
 export default function Exam() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -72,12 +73,7 @@ export default function Exam() {
     const sessionId = localStorage.getItem(`exam_session_${examDetails.id}`);
     if (!sessionId) return;
     try {
-      const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/assessments/log-violation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ sessionId, event })
-      });
+      await api.post('/assessments/log-violation', { sessionId, event });
     } catch (err) {
       console.error(err);
     }
@@ -157,12 +153,7 @@ export default function Exam() {
         if (!sessionId) return;
         
         try {
-          const token = localStorage.getItem('token');
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/assessments/proctoring-snapshot`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ sessionId, imageBase64 })
-          });
+          await api.post('/assessments/proctoring-snapshot', { sessionId, imageBase64 });
         } catch (err) {
           console.error("Failed to upload snapshot", err);
         }
