@@ -58,22 +58,7 @@ export default function SeekerLayout() {
       title: 'Hired!',
       message: 'Congratulations! Tech Hub Lilongwe has selected you for the position of Frontend Developer. They will contact you shortly.',
       time: '2 hours ago',
-      
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          <Link to="/" className="flex items-center gap-2">
-            <Briefcase className="h-8 w-8 text-primary-600" />
-            <span className="font-bold text-xl tracking-tight text-gray-900">
-              Talent<span className="text-primary-600">Mw</span>
-            </span>
-          </Link>
-          <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="w-6 h-6 text-gray-500" />
-          </button>
-        </dread: false,
+      read: false,
       icon: <Briefcase className="w-4 h-4 text-green-600" />,
       bg: 'bg-green-100'
     },
@@ -107,7 +92,22 @@ export default function SeekerLayout() {
         <div 
           className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-        />iv>
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
+          <Link to="/" className="flex items-center gap-2">
+            <Briefcase className="h-8 w-8 text-primary-600" />
+            <span className="font-bold text-xl tracking-tight text-gray-900">
+              Talent<span className="text-primary-600">Mw</span>
+            </span>
+          </Link>
+          <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <X className="w-6 h-6 text-gray-500" />
+          </button>
+        </div>
         
         <nav className="p-4 space-y-2">
           {(!cvCompleted) ? (
@@ -203,7 +203,7 @@ export default function SeekerLayout() {
                     </div>
                   </motion.div>
                 )}
-                   </AnimatePresence>
+              </AnimatePresence>
             </div>
             <div className="flex items-center gap-4 border-l pl-4 border-gray-200">
               <div className="flex items-center gap-3">
