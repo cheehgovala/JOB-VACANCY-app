@@ -128,6 +128,17 @@ export default function Payment() {
             <p className="text-xs text-gray-500 text-center mt-4">
               Secure payments powered by PayChangu
             </p>
+
+            {/* Developer Bypass */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => navigate(`/payment-success?plan=${planId}`)}
+                className="w-full flex justify-center py-3 px-4 border border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all active:scale-[0.98]"
+              >
+                Simulate Success (Dev Mode)
+              </button>
+            </div>
           </form>
         </div>
       </div>

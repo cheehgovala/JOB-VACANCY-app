@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Briefcase, Building2, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
@@ -10,6 +11,7 @@ export default function JobSearch() {
   const seekerSkills = user?.seekerProfile?.skills?.toLowerCase() || '';
   const savedJobIds = user?.savedJobs || [];
   const appliedJobIds = user?.appliedJobs || [];
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('all');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -120,13 +122,14 @@ export default function JobSearch() {
     if (selectedJob) saveJob(selectedJob.id);
   };
 
-  const handleApplyBtn = () => {
+  const handleApplyBtn = async () => {
     if (selectedJob) {
-      const res = applyToJob(selectedJob);
+      const res = await applyToJob(selectedJob);
       if (!res.success) {
         alert(res.message);
       } else {
         alert('Application submitted successfully! It is now visible to the employer.');
+        navigate('/seeker/applications');
       }
     }
   };

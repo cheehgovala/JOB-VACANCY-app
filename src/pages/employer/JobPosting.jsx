@@ -73,7 +73,7 @@ export default function JobPosting() {
     };
 
     publishJob(jobData);
-    navigate('/employer/jobs');
+    navigate('/employer/dashboard');
   };
 
   return (

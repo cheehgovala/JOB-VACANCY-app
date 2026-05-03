@@ -88,7 +88,7 @@ export default function EmployerDashboard() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-gray-900">Recent Applications</h2>
-              <Link to="/employer/jobs" className="text-sm font-bold text-primary-600 hover:text-primary-700">View All</Link>
+              <Link to="/employer/pipeline" className="text-sm font-bold text-primary-600 hover:text-primary-700">View Pipeline</Link>
             </div>
             
             <div className="overflow-x-auto">
@@ -173,9 +173,9 @@ export default function EmployerDashboard() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-600 hover:bg-gray-50 transition-colors">
+            <Link to="/employer/pipeline" className="block text-center w-full mt-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-600 hover:bg-gray-50 transition-colors">
               Review Pipeline
-            </button>
+            </Link>
           </div>
         </div>
       </div>

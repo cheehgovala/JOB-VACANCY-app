@@ -11,6 +11,7 @@ import VerifyOTP from './pages/public/VerifyOTP';
 import Subscription from './pages/public/Subscription';
 import Payment from './pages/public/Payment';
 import PaymentSuccess from './pages/public/PaymentSuccess';
+import PaymentFailed from './pages/public/PaymentFailed';
 
 import SeekerDashboard from './pages/seeker/Dashboard';
 import CVBuilder from './pages/seeker/CVBuilder';
@@ -37,6 +38,7 @@ function App() {
         <Route path="subscription" element={<Subscription />} />
         <Route path="payment" element={<Payment />} />
         <Route path="payment-success" element={<PaymentSuccess />} />
+        <Route path="payment-failed" element={<PaymentFailed />} />
       </Route>
 
       <Route element={<SubscriptionGuard />}>

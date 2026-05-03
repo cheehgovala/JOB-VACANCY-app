@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Briefcase, Clock, DollarSign, MapPin, Search, Star, XCircle } from 'lucide-react';
+import { ArrowRight, Briefcase, Clock, DollarSign, MapPin, Search, Star, XCircle, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Applications() {
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -58,7 +59,7 @@ export default function Applications() {
       job: 'System Admin',
       company: 'Mw Networks',
       date: 'Sep 10, 2023',
-      status: 'Under Review',
+      status: 'Pending Assessment',
       score: '—'
     }
   ];
@@ -72,6 +73,17 @@ export default function Applications() {
 
       case 'Not Selected':
         return <span className="bg-red-100 text-red-700 font-medium px-3 py-1 rounded-full text-xs flex items-center gap-1 w-max"><XCircle className="w-3.5 h-3.5"/> Not Selected</span>;
+      case 'Pending Assessment':
+        return (
+          <div className="flex items-center gap-3">
+            <span className="bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-full text-xs flex items-center gap-1 w-max">
+              <FileText className="w-3.5 h-3.5"/> Action Required
+            </span>
+            <Link to="/seeker/assessments" className="text-xs font-bold text-blue-600 hover:text-blue-800 underline">
+              Take Assessment
+            </Link>
+          </div>
+        );
       case 'Hired':
         return <span className="bg-green-100 text-green-700 font-medium px-3 py-1 rounded-full text-xs flex items-center gap-1 w-max"><Briefcase className="w-3.5 h-3.5"/> Hired</span>;
       default:
