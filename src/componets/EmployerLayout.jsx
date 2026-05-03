@@ -90,3 +90,40 @@ export default function EmployerLayout() {
           <div className="flex-1 max-w-xl mx-auto hidden md:block">
             {/* Command Pallete placeholder */}
           </div>
+
+          <div className="flex-1 flex justify-end items-center gap-4">
+            <button className="relative p-2 text-gray-400 hover:text-gray-500 transition-colors">
+              <Bell className="w-6 h-6" />
+              <span className="absolute top-1 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+            </button>
+            <div className="flex items-center gap-4 border-l pl-4 border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold overflow-hidden">
+                  {user?.profilePicture ? (
+                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    "AC"
+                  )}
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-bold text-gray-900">Acme Corp</p>
+                  <p className="text-xs text-primary-600 font-medium">Blantyre, MW</p>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200 hover:bg-red-50"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
