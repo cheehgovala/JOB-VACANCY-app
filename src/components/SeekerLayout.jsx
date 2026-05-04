@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, FileText, CheckCircle, Clock, Search, Bell, Menu, X, Star, Calendar } from 'lucide-react';
+import { Briefcase, FileText, CheckCircle, Clock, Search, Bell, Menu, X, Star, Calendar, LogOut } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 export default function SeekerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,38 +53,58 @@ export default function SeekerLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownRef]);
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Hired!',
-      message: 'Congratulations! Tech Hub Lilongwe has selected you for the position of Frontend Developer. They will contact you shortly.',
-      time: '2 hours ago',
-      read: false,
-      icon: <Briefcase className="w-4 h-4 text-green-600" />,
-      bg: 'bg-green-100'
-    },
+  const [notifications, setNotifications] = useState([]);
 
-    {
-      id: 3,
-      title: 'Application Shortlisted',
-      message: 'Great news! You have been shortlisted for Product Engineer at FinTech Mw.',
-      time: '3 days ago',
-      read: true,
-      icon: <Star className="w-4 h-4 text-amber-600" />,
-      bg: 'bg-amber-100'
-    },
-    {
-      id: 4,
-      title: 'Application Update',
-      message: 'Thank you for your application for Junior Developer at Airtel Malawi. The position has now been filled.',
-      time: '1 week ago',
-      read: true,
-      icon: <X className="w-4 h-4 text-red-600" />,
-      bg: 'bg-red-100'
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get('/notifications');
+        setNotifications(res.data);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+    if (user) fetchNotifications();
+  }, [user]);
+
+  const markAllAsRead = async () => {
+    try {
+      await api.put('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read', err);
     }
-  ];
+  };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const markAsRead = async (id) => {
+    try {
+      await api.put(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      console.error('Failed to mark as read', err);
+    }
+  };
+
+  const getNotificationStyle = (type) => {
+    switch(type) {
+      case 'success': return { icon: <CheckCircle className="w-4 h-4 text-green-600" />, bg: 'bg-green-100' };
+      case 'error': return { icon: <X className="w-4 h-4 text-red-600" />, bg: 'bg-red-100' };
+      case 'warning': return { icon: <Star className="w-4 h-4 text-amber-600" />, bg: 'bg-amber-100' };
+      default: return { icon: <Bell className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-100' };
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return `${Math.floor(diff / 86400)} days ago`;
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -178,29 +199,40 @@ export default function SeekerLayout() {
                     </div>
                     
                     <div className="max-h-[400px] overflow-y-auto">
-                      {notifications.map((notif) => (
-                        <div key={notif.id} className={`p-4 border-b border-gray-50 flex gap-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.read ? 'bg-blue-50/30' : ''}`}>
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notif.bg}`}>
-                            {notif.icon}
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className={`text-sm ${!notif.read ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
-                                {notif.title}
-                              </h4>
-                              <span className="text-xs text-gray-400 font-medium whitespace-nowrap ml-2">{notif.time}</span>
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500 text-sm">No notifications yet.</div>
+                      ) : notifications.map((notif) => {
+                        const style = getNotificationStyle(notif.type);
+                        return (
+                          <div 
+                            key={notif._id} 
+                            onClick={() => !notif.isRead && markAsRead(notif._id)}
+                            className={`p-4 border-b border-gray-50 flex gap-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
+                          >
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${style.bg}`}>
+                              {style.icon}
                             </div>
-                            <p className="text-xs text-gray-600 leading-relaxed">{notif.message}</p>
+                            <div>
+                              <div className="flex justify-between items-start mb-1">
+                                <h4 className={`text-sm ${!notif.isRead ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
+                                  {notif.title}
+                                </h4>
+                                <span className="text-xs text-gray-400 font-medium whitespace-nowrap ml-2">{formatTime(notif.createdAt)}</span>
+                              </div>
+                              <p className="text-xs text-gray-600 leading-relaxed">{notif.message}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     
-                    <div className="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                      <button className="text-sm font-bold text-primary-600 hover:text-primary-700">
-                        Mark all as read
-                      </button>
-                    </div>
+                    {notifications.length > 0 && unreadCount > 0 && (
+                      <div className="p-3 bg-gray-50 border-t border-gray-100 text-center">
+                        <button onClick={markAllAsRead} className="text-sm font-bold text-primary-600 hover:text-primary-700">
+                          Mark all as read
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -214,7 +246,7 @@ export default function SeekerLayout() {
                   {user?.profilePicture ? (
                     <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    "JS"
+                    (user?.seekerProfile?.personal?.fullName || user?.name || 'Seeker').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
                   )}
                   <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-[10px] rounded-full">
                     Upload
@@ -228,15 +260,16 @@ export default function SeekerLayout() {
                   onChange={handleImageUpload} 
                 />
                 <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900">John Seeker</p>
-                  <p className="text-xs text-gray-500">Premium Member</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.seekerProfile?.personal?.fullName || user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.hasActiveSubscription ? 'Premium Member' : 'Standard Member'}</p>
                 </div>
               </div>
               <button 
                 onClick={handleLogout}
-                className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200 hover:bg-red-50"
+                className="text-sm font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all px-4 py-2 rounded-xl border border-gray-200 hover:border-red-200 shadow-sm flex items-center gap-2 group"
               >
-                Logout
+                <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                Sign Out
               </button>
             </div>
           </div>

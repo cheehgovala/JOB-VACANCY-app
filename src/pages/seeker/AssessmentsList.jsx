@@ -76,7 +76,7 @@ export default function AssessmentsList() {
           ))}
 
           {completedAssessments.map((app, index) => {
-            const passed = app.assessmentSessionId.score >= 70; // Hardcoded fallback passing score for display
+            const passed = app.assessmentSessionId.score >= (app.assessmentSessionId.examId?.passThreshold || 70);
             return (
               <motion.div 
                 key={app._id}

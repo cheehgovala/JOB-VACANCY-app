@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { Award, Briefcase, CheckCircle, Download, FileText, GraduationCap, MapPin, Target, X } from 'lucide-react';
 
-export default function CandidateProfileModal({ isOpen, onClose, candidate }) {
+export default function CandidateProfileModal({ isOpen, onClose, candidate, onStatusChange }) {
   if (!isOpen || !candidate) return null;
 
   const handleDownloadPDF = () => {
@@ -54,6 +54,28 @@ export default function CandidateProfileModal({ isOpen, onClose, candidate }) {
             </div>
             
             <div className="flex items-center gap-3">
+              {candidate.status === 'Shortlisted' ? (
+                <div className="bg-green-50 text-green-700 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 border border-green-200 shadow-sm">
+                  <CheckCircle className="w-4 h-4" /> Shortlisted
+                </div>
+              ) : (
+                <button 
+                  onClick={() => onStatusChange(candidate.id, 'Shortlisted')}
+                  className="bg-green-600 text-white hover:bg-green-500 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-md shadow-green-500/20"
+                >
+                  <CheckCircle className="w-4 h-4" /> Shortlist Candidate
+                </button>
+              )}
+              
+              {candidate.status !== 'Rejected' && candidate.status !== 'Shortlisted' && (
+                <button 
+                  onClick={() => onStatusChange(candidate.id, 'Rejected')}
+                  className="bg-white text-red-600 hover:bg-red-50 border border-red-200 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  <X className="w-4 h-4" /> Reject
+                </button>
+              )}
+
               <button 
                 onClick={handleDownloadPDF}
                 className="bg-primary-50 text-primary-700 hover:bg-primary-100 hover:text-primary-800 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors border border-primary-200"

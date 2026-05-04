@@ -8,8 +8,13 @@ import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 
 export default function JobSearch() {
   const { user, saveJob, applyToJob } = useAuth();
-  const seekerSkills = user?.seekerProfile?.skills?.toLowerCase() || '';
-  const savedJobIds = user?.savedJobs || [];
+  const rawSkills = user?.seekerProfile?.skills;
+  const seekerSkills = useMemo(() => {
+    if (Array.isArray(rawSkills)) return rawSkills.map(s => s.toLowerCase());
+    if (typeof rawSkills === 'string') return rawSkills.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  }, [rawSkills]);
+  const savedJobIds = (user?.savedJobs || []).map(j => typeof j === 'string' ? j : (j._id || j.id));
   const appliedJobIds = user?.appliedJobs || [];
   const navigate = useNavigate();
 
@@ -32,7 +37,16 @@ export default function JobSearch() {
     const fetchJobs = async () => {
       try {
         const { data } = await api.get('/jobs');
-        setApiJobs(data || []);
+        const mappedJobs = (data || []).map(j => ({
+          ...j,
+          id: j._id || j.id,
+          type: j.jobType || j.type || 'Full-Time',
+          experience: j.experienceLevel || j.experience || 'Entry-Level',
+          industry: j.category || j.industry || 'Technology',
+          skills: j.skills || j.requirements || [],
+          match: j.match || 0,
+        }));
+        setApiJobs(mappedJobs);
       } catch (err) {
         console.error('Failed to fetch jobs', err);
       }
@@ -40,72 +54,7 @@ export default function JobSearch() {
     fetchJobs();
   }, []);
 
-  const jobs = [
-    { 
-      id: 1, 
-      title: 'Senior Frontend Developer', 
-      company: 'Tech Hub Lilongwe', 
-      location: 'Lilongwe', 
-      salary: 'MWK 1.5M - 2.5M', 
-      type: 'Full-time',
-      experience: 'Senior',
-      industry: 'Technology',
-      match: 92,
-      posted: '2 days ago',
-      hasAssessment: true,
-      isPremium: true,
-      skills: ['reactjs', 'frontend', 'javascript', 'css'],
-      description: 'We are looking for an experienced Senior Frontend Developer to lead our UI engineering team. You will be responsible for building complex interfaces using ReactJS, optimizing application performance, and mentoring junior developers. Requires at least 5 years of experience.'
-    },
-    { 
-      id: 2, 
-      title: 'UX/UI Designer', 
-      company: 'Malawi Digital Solutions', 
-      location: 'Blantyre', 
-      salary: 'MWK 1.2M - 1.8M', 
-      type: 'Contract',
-      experience: 'Mid Level',
-      industry: 'Design',
-      match: 85,
-      posted: '1 week ago',
-      hasAssessment: false,
-      isPremium: false,
-      skills: ['figma', 'design', 'ui', 'ux'],
-      description: 'Join our creative agency to design engaging digital experiences for our corporate clients. You should be proficient in Figma, have a strong portfolio demonstrating user-centric design principles, and be able to collaborate closely with developers.'
-    },
-    { 
-      id: 3, 
-      title: 'Backend Engineer', 
-      company: 'National Bank of Malawi', 
-      location: 'Blantyre', 
-      salary: 'MWK 2.5M - 3.5M', 
-      type: 'Full-time',
-      experience: 'Mid Level',
-      industry: 'Finance',
-      match: 78,
-      posted: '3 days ago',
-      hasAssessment: true,
-      isPremium: true,
-      skills: ['nodejs', 'backend', 'sql', 'api'],
-      description: 'The National Bank of Malawi is expanding its digital banking team. We need a Backend Engineer with strong Node.js and SQL experience to build scalable and secure financial APIs. Experience in the banking sector is a plus.'
-    },
-    { 
-      id: 4, 
-      title: 'Product Manager', 
-      company: 'Airtel Malawi', 
-      location: 'Lilongwe', 
-      salary: 'MWK 3.0M - 4.5M', 
-      type: 'Full-time',
-      experience: 'Executive',
-      industry: 'Telecommunications',
-      match: 65,
-      posted: 'Just now',
-      hasAssessment: true,
-      isPremium: true,
-      skills: ['project management', 'agile', 'leadership', 'strategy'],
-      description: 'Lead the continuous evolution of our mobile platform products. The ideal candidate will have extensive experience in agile methodologies, cross-functional team leadership, and a track record of successful product launches in the telecom industry.'
-    }
-  ];
+
 
   const handleFilterChange = (category, value) => {
     setFilters(prev => {
@@ -118,8 +67,11 @@ export default function JobSearch() {
     });
   };
 
-  const handleSaveBtn = () => {
-    if (selectedJob) saveJob(selectedJob.id);
+  const handleSaveBtn = async () => {
+    if (selectedJob) {
+      await saveJob(selectedJob.id);
+      alert('Job saved successfully!');
+    }
   };
 
   const handleApplyBtn = async () => {
@@ -135,20 +87,38 @@ export default function JobSearch() {
   };
 
   const allJobs = useMemo(() => {
-    // Merge fallback jobs and API jobs, ensuring no duplicates by ID
-    const apiJobMap = new Map(apiJobs.map(j => [j._id || j.id, j]));
-    const merged = [...apiJobs];
-    for (const job of jobs) {
-      if (!apiJobMap.has(job.id)) merged.push(job);
-    }
-    return merged;
-  }, [apiJobs]);
+    return apiJobs.map(job => {
+      let score = 0;
+      const jobSkills = job.skills || [];
+      if (jobSkills.length > 0 && seekerSkills.length > 0) {
+        const matched = jobSkills.filter(req => seekerSkills.some(sk => sk.includes(req.toLowerCase()) || req.toLowerCase().includes(sk)));
+        score += (matched.length / jobSkills.length) * 60;
+      } else {
+        score += 30; // Base score if no specific skills required
+      }
+      
+      const userExpCount = user?.seekerProfile?.experience?.length || 0;
+      const expLevel = job.experience || 'Entry-Level';
+      if (expLevel.includes('Executive') && userExpCount > 4) score += 40;
+      else if (expLevel.includes('Senior') && userExpCount >= 3) score += 40;
+      else if (expLevel.includes('Mid') && userExpCount >= 1) score += 40;
+      else if (expLevel.includes('Entry') || expLevel === 'Entry-Level') score += 40;
+      else score += 20;
+
+      return { ...job, match: Math.min(100, Math.round(score)) };
+    });
+  }, [apiJobs, seekerSkills, user]);
 
   const filteredJobs = useMemo(() => {
     return allJobs.filter(job => {
       // Free text search
-      if (searchQuery && !job.title.toLowerCase().includes(searchQuery.toLowerCase()) && !job.company.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (searchLocation && !job.location.toLowerCase().includes(searchLocation.toLowerCase())) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const titleMatch = job.title?.toLowerCase().includes(query) || false;
+        const companyMatch = job.company?.toLowerCase().includes(query) || false;
+        if (!titleMatch && !companyMatch) return false;
+      }
+      if (searchLocation && !job.location?.toLowerCase().includes(searchLocation.toLowerCase())) return false;
 
       // Sidebar filters
       if (filters.location.length > 0 && !filters.location.includes(job.location)) return false;
@@ -159,12 +129,7 @@ export default function JobSearch() {
 
       // Tabs Logic
       if (activeTab === 'recommended') {
-        if (seekerSkills) {
-          // Check if any of the job's skills exist in the user's skill string
-          const matchesSkill = job.skills.some(skill => seekerSkills.includes(skill.toLowerCase()));
-          return matchesSkill || job.match >= 80;
-        }
-        return job.match >= 80;
+        return job.match >= 70;
       }
       if (activeTab === 'saved') {
         return savedJobIds.includes(job.id);
@@ -402,7 +367,7 @@ export default function JobSearch() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3">Required Skills</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedJob.skills.map((skill, idx) => (
+                    {(selectedJob.skills || []).map((skill, idx) => (
                       <span key={idx} className="bg-primary-50 text-primary-700 px-3 py-1 rounded-lg text-sm font-medium border border-primary-100">
                         {skill}
                       </span>

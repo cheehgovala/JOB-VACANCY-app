@@ -113,6 +113,17 @@ export default function Pipeline() {
   const reviewedCount = filteredCandidates.filter(c => c.status === 'Under Review' || c.status === 'Reviewed').length;
   const shortlistedCount = filteredCandidates.filter(c => c.status === 'Shortlisted').length;
 
+  const updateCandidateStatus = async (applicationId, status) => {
+    try {
+      await api.put(`/applications/${applicationId}/status`, { status });
+      setCandidates(prev => prev.map(c => c.id === applicationId ? { ...c, status } : c));
+      setSelectedCandidate(prev => prev?.id === applicationId ? { ...prev, status } : prev);
+    } catch (error) {
+      console.error('Failed to update status', error);
+      alert('Error updating candidate status');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
       {/* Header & Stats */}
@@ -357,7 +368,8 @@ export default function Pipeline() {
       <CandidateProfileModal 
         isOpen={!!selectedCandidate} 
         onClose={() => setSelectedCandidate(null)} 
-        candidate={selectedCandidate} 
+        candidate={selectedCandidate}
+        onStatusChange={updateCandidateStatus} 
       />
     </div>
   );

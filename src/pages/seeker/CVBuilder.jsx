@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { Award, Briefcase, Check, ChevronRight, Code, Download, FileText, GraduationCap, Link, User, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
@@ -10,7 +10,7 @@ import api from '../../api/axios';
 
 export default function CVBuilder() {
   const navigate = useNavigate();
-  const { updateSeekerProfile } = useAuth();
+  const { user, updateSeekerProfile } = useAuth();
   
   const [step, setStep] = useState(1);
   const totalSteps = 6;
@@ -33,6 +33,46 @@ export default function CVBuilder() {
     references: [{ name: '', role: '', contact: '' }],
     skills: ''
   });
+
+  useEffect(() => {
+    if (user?.seekerProfile) {
+      const sp = user.seekerProfile;
+      setFormData({
+        personal: {
+          fullName: sp.personal?.fullName || user.name || '',
+          email: sp.personal?.email || user.email || '',
+          phone: sp.personal?.phone || user.phone || '',
+          location: sp.personal?.location || '',
+          bio: sp.personal?.bio || '',
+          nationalIdUrl: sp.personal?.nationalIdUrl || ''
+        },
+        experience: sp.experience?.length ? sp.experience.map(e => ({
+          title: e.title || '',
+          company: e.company || '',
+          duration: e.duration || (e.startDate ? `${new Date(e.startDate).getFullYear()}` : ''),
+          description: e.description || ''
+        })) : [{ title: '', company: '', duration: '', description: '' }],
+        education: sp.education?.length ? sp.education.map(e => ({
+          degree: e.degree || '',
+          institution: e.institution || '',
+          year: e.year || ''
+        })) : [{ degree: '', institution: '', year: '' }],
+        certifications: sp.certifications?.length ? sp.certifications : [{ name: '', organization: '', year: '', attachmentUrl: '' }],
+        references: sp.references?.length ? sp.references : [{ name: '', role: '', contact: '' }],
+        skills: Array.isArray(sp.skills) ? sp.skills.join(', ') : (sp.skills || '')
+      });
+    } else if (user) {
+      setFormData(prev => ({
+        ...prev,
+        personal: {
+          ...prev.personal,
+          fullName: user.name || '',
+          email: user.email || '',
+          phone: user.phone || ''
+        }
+      }));
+    }
+  }, [user]);
 
   const uploadFile = async (file) => {
     const dataForm = new FormData();
@@ -97,10 +137,14 @@ export default function CVBuilder() {
     return score;
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const completeness = calculateCompleteness();
     if (updateSeekerProfile) {
-      updateSeekerProfile(formData, completeness);
+      const skillsArray = typeof formData.skills === 'string' 
+        ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) 
+        : formData.skills;
+        
+      await updateSeekerProfile({ ...formData, skills: skillsArray }, completeness);
     }
     localStorage.setItem('cvCompleted', 'true');
     navigate('/seeker/jobs');
@@ -296,7 +340,8 @@ export default function CVBuilder() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input name="fullName" value={formData.personal.fullName} onChange={handlePersonalChange} type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" placeholder="e.g. Kondwani Phiri" />
+                <input name="fullName" value={formData.personal.fullName} onChange={handlePersonalChange} type="text" className={`w-full px-4 py-2 border ${personalErrors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="e.g. Kondwani Phiri" />
+                {personalErrors.fullName && <p className="mt-1 text-sm text-red-600">{personalErrors.fullName}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -310,16 +355,18 @@ export default function CVBuilder() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <select name="location" value={formData.personal.location} onChange={handlePersonalChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none">
+                <select name="location" value={formData.personal.location} onChange={handlePersonalChange} className={`w-full px-4 py-2 border ${personalErrors.location ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none`}>
                   <option value="" disabled>Select a district</option>
                   {MALAWI_DISTRICTS.map(district => (
                     <option key={district} value={district}>{district}</option>
                   ))}
                 </select>
+                {personalErrors.location && <p className="mt-1 text-sm text-red-600">{personalErrors.location}</p>}
               </div>
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
-                <textarea name="bio" value={formData.personal.bio} onChange={handlePersonalChange} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" placeholder="Briefly describe your professional background and goals..."></textarea>
+                <textarea name="bio" value={formData.personal.bio} onChange={handlePersonalChange} rows={4} className={`w-full px-4 py-2 border ${personalErrors.bio ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="Briefly describe your professional background and goals..."></textarea>
+                {personalErrors.bio && <p className="mt-1 text-sm text-red-600">{personalErrors.bio}</p>}
               </div>
               <div className="col-span-1 md:col-span-2 pt-2 border-t border-gray-100">
                 <label className="block text-sm font-medium text-gray-700 mb-2">National ID Attachment</label>

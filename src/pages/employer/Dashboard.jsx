@@ -49,7 +49,7 @@ export default function EmployerDashboard() {
     { name: 'Active Jobs', value: statsData.activeJobs.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
     { name: 'Total Applications', value: statsData.totalApps.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { name: 'Shortlisted Candidates', value: statsData.shortlisted.toString(), icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100' },
-    { name: 'Pending Assessments', value: statsData.pending.toString(), icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { name: 'Pending Applications', value: statsData.pending.toString(), icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
   ];
 
   return (

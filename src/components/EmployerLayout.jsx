@@ -1,4 +1,4 @@
-import { Building, Users, FileBarChart, Bell, Menu, X, CheckSquare } from 'lucide-react';
+import { Building, Users, FileBarChart, Bell, Menu, X, CheckSquare, LogOut } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -104,9 +104,10 @@ export default function EmployerLayout() {
               </div>
               <button 
                 onClick={handleLogout}
-                className="text-xs font-bold text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-200 hover:bg-red-50"
+                className="text-sm font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all px-4 py-2 rounded-xl border border-gray-200 hover:border-red-200 shadow-sm flex items-center gap-2 group"
               >
-                Logout
+                <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                Sign Out
               </button>
             </div>
           </div>

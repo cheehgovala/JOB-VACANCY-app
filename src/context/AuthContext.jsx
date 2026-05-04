@@ -97,7 +97,7 @@ export function AuthProvider({ children }) {
   const updateSeekerProfile = async (profileData, completeness) => {
     if (!user) return;
     try {
-      const payload = { seekerProfile: { ...profileData, completeness } };
+      const payload = { ...profileData, completeness };
       const res = await api.put('/auth/profile', payload);
       setUser(res.data.user || res.data);
     } catch (error) {

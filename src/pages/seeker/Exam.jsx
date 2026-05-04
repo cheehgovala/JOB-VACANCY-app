@@ -141,6 +141,15 @@ export default function Exam() {
     if (activeStartTime) {
       setHasStarted(true);
       const limitStr = localStorage.getItem(`exam_limit_${applicationId}`) || '20';
+      const titleStr = localStorage.getItem(`exam_title_${applicationId}`) || 'Assessment';
+      const passStr = localStorage.getItem(`exam_pass_${applicationId}`) || '70';
+      
+      setExamDetails({
+        name: titleStr,
+        timeLimitMinutes: parseInt(limitStr, 10),
+        passThreshold: parseInt(passStr, 10)
+      });
+      
       const elapsedSeconds = Math.floor((Date.now() - parseInt(activeStartTime, 10)) / 1000);
       const remainingSeconds = (parseInt(limitStr, 10) * 60) - elapsedSeconds;
       
@@ -190,14 +199,16 @@ export default function Exam() {
     try {
       const { data } = await api.post('/assessments/start', { applicationId });
       setExamDetails({
-        name: "Assessment",
+        name: data.title || "Assessment",
         timeLimitMinutes: data.timeLimitMinutes,
-        passThreshold: 70
+        passThreshold: data.passThreshold || 70
       });
       setShuffledQuestions(data.questions);
       
       localStorage.setItem(`exam_start_${applicationId}`, Date.now().toString());
       localStorage.setItem(`exam_limit_${applicationId}`, data.timeLimitMinutes.toString());
+      localStorage.setItem(`exam_title_${applicationId}`, data.title || "Assessment");
+      localStorage.setItem(`exam_pass_${applicationId}`, (data.passThreshold || 70).toString());
       localStorage.setItem(`exam_questions_${applicationId}`, JSON.stringify(data.questions));
       localStorage.setItem(`exam_session_${applicationId}`, data.sessionId);
       
@@ -253,6 +264,8 @@ export default function Exam() {
     
     localStorage.removeItem(`exam_start_${applicationId}`);
     localStorage.removeItem(`exam_limit_${applicationId}`);
+    localStorage.removeItem(`exam_title_${applicationId}`);
+    localStorage.removeItem(`exam_pass_${applicationId}`);
     localStorage.removeItem(`exam_questions_${applicationId}`);
     localStorage.removeItem(`exam_answers_${applicationId}`);
     localStorage.removeItem(`exam_session_${applicationId}`);
@@ -265,7 +278,7 @@ export default function Exam() {
   };
 
   if (submitted) {
-    const passed = score >= 70;
+    const passed = score >= examDetails.passThreshold;
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <motion.div 
@@ -320,7 +333,7 @@ export default function Exam() {
           <div className="space-y-4 mb-8">
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
               <span className="text-gray-600 font-medium">Questions</span>
-              <span className="font-bold text-gray-900">{questions.length}</span>
+              <span className="font-bold text-gray-900">{shuffledQuestions.length > 0 ? shuffledQuestions.length : 'Various'}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
               <span className="text-gray-600 font-medium">Time Limit</span>

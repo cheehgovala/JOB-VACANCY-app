@@ -8,11 +8,7 @@ export default function Applications() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showRecommended, setShowRecommended] = useState(false);
 
-  const recommendedJobs = [
-    { id: 101, title: 'Senior Frontend Developer', company: 'Tech Innovation Ltd', location: 'Blantyre', salary: 'MWK 1.5M - 2.5M' },
-    { id: 102, title: 'React JS Engineer', company: 'Digital Malawi', location: 'Lilongwe', salary: 'MWK 1.2M - 1.8M' },
-    { id: 103, title: 'UI/UX Developer', company: 'Creative Studios Mw', location: 'Remote', salary: 'MWK 900K - 1.4M' }
-  ];
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
 
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,8 +26,21 @@ export default function Applications() {
           score: app.matchScore ? `${app.matchScore}%` : '—'
         }));
         setApplications(formatted);
+
+        // Fetch jobs for recommendations
+        const jobsRes = await api.get('/jobs');
+        const appliedJobIds = new Set(data.map(app => app.jobId?._id));
+        const unappliedJobs = jobsRes.data.filter(j => !appliedJobIds.has(j._id)).slice(0, 3);
+        const formattedJobs = unappliedJobs.map(j => ({
+          id: j._id || j.id,
+          title: j.title,
+          company: j.employerId?.employerProfile?.companyName || 'Unknown Company',
+          location: j.location,
+          salary: j.salary
+        }));
+        setRecommendedJobs(formattedJobs);
       } catch (error) {
-        console.error('Failed to fetch applications:', error);
+        console.error('Failed to fetch applications or jobs:', error);
       } finally {
         setLoading(false);
       }
@@ -205,9 +214,9 @@ export default function Applications() {
                         </div>
                       </div>
                       
-                      <button className="w-full py-2.5 bg-gray-50 hover:bg-primary-50 hover:text-primary-700 text-gray-700 font-semibold rounded-xl text-sm transition-colors border border-gray-100">
-                        Apply Now
-                      </button>
+                      <Link to="/seeker/jobs" className="block text-center w-full py-2.5 bg-gray-50 hover:bg-primary-50 hover:text-primary-700 text-gray-700 font-semibold rounded-xl text-sm transition-colors border border-gray-100">
+                        View Details
+                      </Link>
                     </div>
                   ))}
                 </div>
