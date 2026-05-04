@@ -9,15 +9,7 @@ export default function EmployerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (user?.role === 'employer' && user?.hasActiveSubscription) {
-      if (!user.postedJobs || user.postedJobs.length === 0) {
-        if (location.pathname !== '/employer/post-job') {
-          navigate('/employer/post-job');
-        }
-      }
-    }
-  }, [user, location.pathname, navigate]);
+  // Removed strict redirect to post-job. Employers can view their dashboard and pipeline even without jobs.
 
   const handleLogout = () => {
     navigate('/');
@@ -99,15 +91,15 @@ export default function EmployerLayout() {
             <div className="flex items-center gap-4 border-l pl-4 border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold overflow-hidden">
-                  {user?.profilePicture ? (
-                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  {user?.profilePicture || user?.employerProfile?.companyLogo ? (
+                    <img src={user.profilePicture || user.employerProfile.companyLogo} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    "AC"
+                    user?.name ? user.name.substring(0,2).toUpperCase() : "EM"
                   )}
                 </div>
                 <div className="hidden sm:block">
-                  <p className="text-sm font-bold text-gray-900">Acme Corp</p>
-                  <p className="text-xs text-primary-600 font-medium">Blantyre, MW</p>
+                  <p className="text-sm font-bold text-gray-900">{user?.name || 'Company Name'}</p>
+                  <p className="text-xs text-primary-600 font-medium">Employer</p>
                 </div>
               </div>
               <button 

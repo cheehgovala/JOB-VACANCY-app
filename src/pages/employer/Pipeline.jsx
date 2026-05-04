@@ -1,10 +1,13 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Briefcase, CheckCircle, FileText, Filter, GraduationCap, MapPin, Search, SlidersHorizontal } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowUpRight, Briefcase, CheckCircle, FileText, Filter, GraduationCap, MapPin, Search, SlidersHorizontal, AlertTriangle } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../../api/axios';
 import CandidateProfileModal from '../../components/CandidateProfileModal';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 
 export default function Pipeline() {
+  const [searchParams] = useSearchParams();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   
   // Filter States
@@ -14,74 +17,68 @@ export default function Pipeline() {
   const [experienceLevels, setExperienceLevels] = useState([]);
   const [qualificationLevel, setQualificationLevel] = useState('');
   const [dateRange, setDateRange] = useState('');
+  const [jobIdFilter, setJobIdFilter] = useState(searchParams.get('jobId') || '');
+  const [availableJobs, setAvailableJobs] = useState([]);
 
-  // Rich mock data required by detailed cards
-  const mockCandidates = [
-    { 
-      id: 1, 
-      name: 'Kondwani Phiri', 
-      photo: 'https://i.pravatar.cc/150?u=1',
-      score: 95, 
-      examScore: 88, 
-      district: 'Blantyre',
-      qualification: 'BSc Computer Science',
-      experience: '5 Years',
-      skills: ['React', 'Node.js', 'AWS'],
-      applied: '2h ago' 
-    },
-    { 
-      id: 2, 
-      name: 'Sarah Mwanza', 
-      photo: 'https://i.pravatar.cc/150?u=2',
-      score: 92, 
-      examScore: 94, 
-      district: 'Lilongwe',
-      qualification: 'MSc Eng',
-      experience: '4 Years',
-      skills: ['React', 'TypeScript', 'Figma'],
-      applied: '1d ago' 
-    },
-    { 
-      id: 3, 
-      name: 'Chisomo Banda', 
-      photo: 'https://i.pravatar.cc/150?u=3',
-      score: 88, 
-      examScore: null, 
-      district: 'Mzuzu',
-      qualification: 'BSc IT',
-      experience: '3 Years',
-      skills: ['Vue.js', 'PHP', 'MySQL'],
-      applied: '1d ago' 
-    },
-    { 
-      id: 4, 
-      name: 'Grace Lungu', 
-      photo: 'https://i.pravatar.cc/150?u=4',
-      score: 76, 
-      examScore: 65, 
-      district: 'Zomba',
-      qualification: 'Diploma in IT',
-      experience: '1 Year',
-      skills: ['HTML', 'CSS', 'JavaScript'],
-      applied: '3d ago' 
-    },
-    { 
-      id: 5, 
-      name: 'David Nkhata', 
-      photo: 'https://i.pravatar.cc/150?u=5',
-      score: 85, 
-      examScore: 82, 
-      district: 'Blantyre',
-      qualification: 'BSc Computer Science',
-      experience: '2 Years',
-      skills: ['React Native', 'Firebase', 'Redux'],
-      applied: '4d ago' 
-    },
-  ];
+  const [mockCandidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const { data } = await api.get('/applications/employer-all');
+        const formatted = data.map(app => {
+          const profile = app.applicantId?.seekerProfile || {};
+          const personal = profile.personal || {};
+          const education = profile.education || [];
+          const experienceArr = profile.experience || [];
+          
+          let expYears = experienceArr.length; 
+          let district = personal.location || 'Unknown';
+
+          return {
+            id: app._id,
+            name: personal.fullName || app.applicantId?.name || 'Unknown Candidate',
+            photo: app.applicantId?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(personal.fullName || app.applicantId?.name || 'U')}`,
+            score: app.matchScore || 0,
+            examScore: app.assessmentSessionId?.isCompleted ? app.assessmentSessionId.score : null,
+            isFlagged: app.assessmentSessionId?.isFlagged || false,
+            flagReason: app.assessmentSessionId?.flagReason || '',
+            district: district,
+            qualification: education.length > 0 ? education[0].degree : 'Not Specified',
+            experience: `${expYears} Years`,
+            skills: profile.skills || [],
+            applied: new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            status: app.status || 'Pending',
+            jobId: app.jobId?._id || null,
+            jobTitle: app.jobId?.title || 'Unknown Job'
+          };
+        });
+        
+        // Extract unique jobs for the dropdown
+        const uniqueJobs = Array.from(new Set(formatted.filter(c => c.jobId).map(c => c.jobId)))
+          .map(id => {
+            return {
+              id: id,
+              title: formatted.find(c => c.jobId === id).jobTitle
+            };
+          });
+          
+        setAvailableJobs(uniqueJobs);
+        setCandidates(formatted);
+      } catch (error) {
+        console.error('Failed to fetch candidates', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCandidates();
+  }, []);
 
   // Derive sorted & filtered list
   const filteredCandidates = useMemo(() => {
     return mockCandidates
+      .filter(c => jobIdFilter ? c.jobId === jobIdFilter : true)
       .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
       .filter(c => (c.examScore || 0) >= minExamScore)
       .filter(c => locationDistrict ? c.district.toLowerCase() === locationDistrict.toLowerCase() : true)
@@ -110,7 +107,11 @@ export default function Pipeline() {
         const totalB = b.score + (b.examScore || 0);
         return totalB - totalA;
       });
-  }, [searchQuery, minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels, mockCandidates]);
+  }, [searchQuery, minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels, mockCandidates, jobIdFilter]);
+
+  const receivedCount = filteredCandidates.length;
+  const reviewedCount = filteredCandidates.filter(c => c.status === 'Under Review' || c.status === 'Reviewed').length;
+  const shortlistedCount = filteredCandidates.filter(c => c.status === 'Shortlisted').length;
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
@@ -123,15 +124,15 @@ export default function Pipeline() {
         
         <div className="flex bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-x divide-gray-100">
           <div className="px-6 py-4 text-center">
-            <span className="block text-3xl font-black text-gray-900">120</span>
+            <span className="block text-3xl font-black text-gray-900">{receivedCount}</span>
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Received</span>
           </div>
           <div className="px-6 py-4 text-center bg-blue-50/30">
-            <span className="block text-3xl font-black text-blue-600">45</span>
+            <span className="block text-3xl font-black text-blue-600">{reviewedCount}</span>
             <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">Reviewed</span>
           </div>
           <div className="px-6 py-4 text-center bg-green-50/30">
-            <span className="block text-3xl font-black text-green-600">15</span>
+            <span className="block text-3xl font-black text-green-600">{shortlistedCount}</span>
             <span className="text-xs font-bold text-green-800 uppercase tracking-wider">Shortlisted</span>
           </div>
         </div>
@@ -158,6 +159,16 @@ export default function Pipeline() {
                   className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none text-sm" 
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Job Listing</label>
+              <select value={jobIdFilter} onChange={(e) => setJobIdFilter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
+                <option value="">All Jobs</option>
+                {availableJobs.map(job => (
+                  <option key={job.id} value={job.id}>{job.title}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -226,6 +237,7 @@ export default function Pipeline() {
             
             <button 
               onClick={() => {
+                setJobIdFilter('');
                 setSearchQuery('');
                 setMinExamScore(0);
                 setLocationDistrict('');
@@ -249,7 +261,11 @@ export default function Pipeline() {
              </div>
           </div>
 
-          {filteredCandidates.map((candidate, index) => (
+          {loading ? (
+             <div className="text-center p-12 bg-white rounded-2xl border-2 border-dashed border-gray-200 mt-4 text-gray-500">
+               Loading candidates...
+             </div>
+          ) : filteredCandidates.map((candidate, index) => (
             <motion.div 
               key={candidate.id}
               initial={{ opacity: 0, y: 15 }}
@@ -271,6 +287,9 @@ export default function Pipeline() {
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium whitespace-nowrap">
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{candidate.district}</span>
                     <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{candidate.experience}</span>
+                  </div>
+                  <div className="flex items-center mt-1 text-xs text-gray-500 font-medium whitespace-nowrap">
+                    <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">Appling for: <span className="font-bold">{candidate.jobTitle}</span></span>
                   </div>
                   <div className="flex items-center mt-1 text-xs text-gray-500 font-medium">
                     <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{candidate.qualification}</span>
@@ -294,10 +313,15 @@ export default function Pipeline() {
                   <span className="font-black text-green-700 text-lg">{candidate.score}%</span>
                 </div>
 
-                <div className={`text-center p-2 rounded-xl border ${candidate.examScore ? (candidate.examScore >= 70 ? 'bg-blue-50/50 border-blue-100' : 'bg-red-50/50 border-red-100') : 'bg-gray-50 border-gray-100'}`}>
-                  <span className={`block text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1 ${candidate.examScore ? (candidate.examScore >= 70 ? 'text-blue-700' : 'text-red-700') : 'text-gray-500'}`}><FileText className="w-3 h-3" /> Exam</span>
-                  <div className={`font-black flex flex-col items-center leading-tight ${candidate.examScore ? (candidate.examScore >= 70 ? 'text-blue-700' : 'text-red-600') : 'text-gray-400'}`}>
-                    {candidate.examScore ? (
+                <div className={`text-center p-2 rounded-xl border relative ${candidate.examScore !== null ? (candidate.examScore >= 70 ? 'bg-blue-50/50 border-blue-100' : 'bg-red-50/50 border-red-100') : 'bg-gray-50 border-gray-100'}`}>
+                  {candidate.isFlagged && (
+                    <div className="absolute -top-2 -right-2 bg-red-100 border border-red-300 text-red-600 rounded-full p-1" title={candidate.flagReason}>
+                      <AlertTriangle className="w-3 h-3" />
+                    </div>
+                  )}
+                  <span className={`block text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1 ${candidate.examScore !== null ? (candidate.examScore >= 70 ? 'text-blue-700' : 'text-red-700') : 'text-gray-500'}`}><FileText className="w-3 h-3" /> Exam</span>
+                  <div className={`font-black flex flex-col items-center leading-tight ${candidate.examScore !== null ? (candidate.examScore >= 70 ? 'text-blue-700' : 'text-red-600') : 'text-gray-400'}`}>
+                    {candidate.examScore !== null ? (
                       <>
                          <span className="text-lg">{candidate.examScore}%</span>
                          <span className="text-[9px] uppercase">{candidate.examScore >= 70 ? 'PASS' : 'FAIL'}</span>
@@ -311,13 +335,19 @@ export default function Pipeline() {
             </motion.div>
           ))}
           
-          {filteredCandidates.length === 0 && (
+          {filteredCandidates.length === 0 && !loading && (
             <div className="text-center p-12 bg-white rounded-2xl border-2 border-dashed border-gray-200 mt-4">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Filter className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">No matches found</h3>
-              <p className="text-gray-500">Adjust your exam score slider or location filters to see more candidates.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                {mockCandidates.length === 0 ? "No applications yet" : "No matches found"}
+              </h3>
+              <p className="text-gray-500">
+                {mockCandidates.length === 0 
+                  ? "You haven't received any applications for your jobs yet." 
+                  : "Adjust your exam score slider or location filters to see more candidates."}
+              </p>
             </div>
           )}
         </div>

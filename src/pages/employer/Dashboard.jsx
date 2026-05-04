@@ -18,28 +18,35 @@ export default function EmployerDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const { data } = await api.get('/applications/employer-all');
-        setApplications(data);
+        const [appRes, jobsRes] = await Promise.all([
+          api.get('/applications/employer-all'),
+          api.get('/jobs/employer')
+        ]);
+        const apps = appRes.data;
+        const activeJobsCount = jobsRes.data.length;
+        
+        setApplications(apps);
         
         // Calculate basic stats
-        const totalApps = data.length;
-        const shortlisted = data.filter(a => a.status === 'Shortlisted').length;
-        const pending = data.filter(a => a.status === 'Pending').length;
+        const totalApps = apps.length;
+        const shortlisted = apps.filter(a => a.status === 'Shortlisted').length;
+        const pending = apps.filter(a => a.status === 'Pending').length;
         
         setStatsData(prev => ({
           ...prev,
+          activeJobs: activeJobsCount,
           totalApps,
           shortlisted,
           pending
         }));
       } catch (err) {
-        console.error('Failed to fetch applications', err);
+        console.error('Failed to fetch dashboard data', err);
       }
     };
     fetchDashboardData();
   }, []);
   const stats = [
-    { name: 'Active Jobs', value: statsData.activeJobs || '3', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { name: 'Active Jobs', value: statsData.activeJobs.toString(), icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
     { name: 'Total Applications', value: statsData.totalApps.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { name: 'Shortlisted Candidates', value: statsData.shortlisted.toString(), icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100' },
     { name: 'Pending Assessments', value: statsData.pending.toString(), icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
@@ -154,24 +161,33 @@ export default function EmployerDashboard() {
               <Users className="w-5 h-5 text-gray-500" /> Recent Top Matches
             </h2>
             <div className="space-y-4">
-              {[
-                { name: 'Kondwani P.', role: 'Frontend Dev', score: 95 },
-                { name: 'Sarah M.', role: 'UX Designer', score: 92 },
-                { name: 'Chisomo B.', role: 'Backend Eng', score: 88 },
-              ].map((candidate, i) => (
-                <div key={i} className="flex justify-between items-center p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-sm">
-                      {candidate.name.substring(0,2).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-gray-900">{candidate.name}</h3>
-                      <p className="text-xs text-gray-500">{candidate.role}</p>
-                    </div>
-                  </div>
-                  <span className="font-bold text-green-600 text-sm">{candidate.score}% Match</span>
-                </div>
-              ))}
+              {applications.length > 0 ? (
+                [...applications]
+                  .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+                  .slice(0, 3)
+                  .map((app, i) => {
+                    const name = app.applicantId?.name || app.applicantName || 'Candidate';
+                    const role = app.jobId?.title || app.jobTitle || 'Applicant';
+                    const score = app.matchScore || 0;
+                    
+                    return (
+                      <div key={i} className="flex justify-between items-center p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-sm">
+                            {name.substring(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-gray-900">{name}</h3>
+                            <p className="text-xs text-gray-500">{role}</p>
+                          </div>
+                        </div>
+                        <span className="font-bold text-green-600 text-sm">{score}% Match</span>
+                      </div>
+                    );
+                  })
+              ) : (
+                <div className="text-center p-4 text-sm text-gray-500">No matches available yet.</div>
+              )}
             </div>
             <Link to="/employer/pipeline" className="block text-center w-full mt-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-600 hover:bg-gray-50 transition-colors">
               Review Pipeline

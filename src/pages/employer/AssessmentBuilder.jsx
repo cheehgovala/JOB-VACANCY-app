@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, GripVertical, Plus, Settings, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import api from '../../api/axios';
 
 export default function AssessmentBuilder() {
   const [questions, setQuestions] = useState([
@@ -12,21 +14,46 @@ export default function AssessmentBuilder() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  const handleSave = () => {
-    const newExam = {
-      id: Math.random().toString(36).substring(7),
-      name: examName,
-      timeLimit,
-      passScore,
-      questions
-    };
+  const [isSaving, setIsSaving] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const jobId = searchParams.get('jobId');
+
+  const handleSave = async () => {
+    if (!jobId) {
+       alert("No Job ID found. Please create a job first.");
+       return;
+    }
+
+    setIsSaving(true);
     
-    const existingExams = JSON.parse(localStorage.getItem('talent_mw_exams') || '[]');
-    existingExams.push(newExam);
-    localStorage.setItem('talent_mw_exams', JSON.stringify(existingExams));
-    
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    // Transform questions format to match backend model
+    const formattedQuestions = questions.map(q => ({
+       text: q.text,
+       options: q.type === 'text' ? ['N/A'] : q.options,
+       correctOptionIndex: q.correct || 0
+    }));
+
+    try {
+      await api.post('/assessments/exams', {
+         jobId,
+         title: examName,
+         timeLimitMinutes: timeLimit,
+         passThreshold: passScore,
+         questions: formattedQuestions
+      });
+      
+      setIsSaved(true);
+      setTimeout(() => {
+         setIsSaved(false);
+         navigate('/employer/dashboard');
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to save exam", err);
+      alert(err.response?.data?.error || "Error saving exam");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addQuestion = () => {
@@ -66,9 +93,10 @@ export default function AssessmentBuilder() {
           </button>
           <button 
             onClick={handleSave}
-            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${isSaved ? 'bg-green-600 text-white' : 'bg-primary-600 hover:bg-primary-500 text-white'}`}
+            disabled={isSaving}
+            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-50 ${isSaved ? 'bg-green-600 text-white' : 'bg-primary-600 hover:bg-primary-500 text-white'}`}
           >
-            {isSaved ? 'Saved!' : 'Save Assessment'}
+            {isSaving ? 'Saving...' : (isSaved ? 'Saved!' : 'Save Assessment')}
           </button>
         </div>
       </div>

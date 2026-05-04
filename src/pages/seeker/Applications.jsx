@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Briefcase, Clock, DollarSign, MapPin, Search, Star, XCircle, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../../api/axios';
 
 export default function Applications() {
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -13,56 +14,30 @@ export default function Applications() {
     { id: 103, title: 'UI/UX Developer', company: 'Creative Studios Mw', location: 'Remote', salary: 'MWK 900K - 1.4M' }
   ];
 
-  const applications = [
-    {
-      id: 1,
-      job: 'Frontend Developer',
-      company: 'Tech Hub Lilongwe',
-      date: 'Oct 12, 2023',
-      status: 'Hired',
-      score: '92%'
-    },
-    {
-      id: 2,
-      job: 'UX Designer',
-      company: 'Malawi Digital Solutions',
-      date: 'Oct 10, 2023',
-      status: 'Shortlisted',
-      score: '85%'
-    },
-    {
-      id: 3,
-      job: 'Product Engineer',
-      company: 'FinTech Mw',
-      date: 'Sep 28, 2023',
-      status: 'Shortlisted',
-      score: '88%'
-    },
-    {
-      id: 4,
-      job: 'Backend Developer',
-      company: 'DataTech Systems',
-      date: 'Sep 20, 2023',
-      status: 'Shortlisted',
-      score: '90%'
-    },
-    {
-      id: 5,
-      job: 'Junior Developer',
-      company: 'Airtel Malawi',
-      date: 'Sep 15, 2023',
-      status: 'Not Selected',
-      score: '65%'
-    },
-    {
-      id: 6,
-      job: 'System Admin',
-      company: 'Mw Networks',
-      date: 'Sep 10, 2023',
-      status: 'Pending Assessment',
-      score: '—'
-    }
-  ];
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const { data } = await api.get('/applications/my-applications');
+        const formatted = data.map(app => ({
+          id: app._id,
+          job: app.jobId?.title || 'Unknown Role',
+          company: app.jobId?.employerId?.employerProfile?.companyName || 'Unknown Company',
+          date: new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: app.status,
+          score: app.matchScore ? `${app.matchScore}%` : '—'
+        }));
+        setApplications(formatted);
+      } catch (error) {
+        console.error('Failed to fetch applications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
 
   const getStatusBadge = (status) => {
     switch(status) {
@@ -124,37 +99,51 @@ export default function Applications() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {applications.map((app, index) => (
-                <motion.tr 
-                  key={app.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="hover:bg-gray-50/50 transition-colors group"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-5 h-5 text-primary-600" />
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    Loading your applications...
+                  </td>
+                </tr>
+              ) : applications.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    You haven't applied to any jobs yet.
+                  </td>
+                </tr>
+              ) : (
+                applications.map((app, index) => (
+                  <motion.tr 
+                    key={app.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="hover:bg-gray-50/50 transition-colors group"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                          <Briefcase className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <span className="font-bold text-gray-900">{app.job}</span>
                       </div>
-                      <span className="font-bold text-gray-900">{app.job}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {app.company}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                    {app.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="font-bold text-gray-700">{app.score}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(app.status)}
-                  </td>
-
-                </motion.tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                      {app.company}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                      {app.date}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="font-bold text-gray-700">{app.score}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(app.status)}
+                    </td>
+  
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

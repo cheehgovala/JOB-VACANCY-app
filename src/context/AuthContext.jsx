@@ -143,16 +143,38 @@ export function AuthProvider({ children }) {
 
   const publishJob = async (jobData) => {
       try {
-          await api.post('/jobs', jobData);
+          const response = await api.post('/jobs', jobData);
+          return { success: true, job: response.data };
       } catch (error) {
           console.error('Failed to publish job', error);
+          return { success: false, message: error.response?.data?.error || 'Failed to publish job' };
+      }
+  };
+
+  const updateJob = async (jobId, jobData) => {
+      try {
+          const response = await api.put(`/jobs/${jobId}`, jobData);
+          return { success: true, job: response.data };
+      } catch (error) {
+          console.error('Failed to update job', error);
+          return { success: false, message: error.response?.data?.error || 'Failed to update job' };
+      }
+  };
+
+  const deleteJob = async (jobId) => {
+      try {
+          await api.delete(`/jobs/${jobId}`);
+          return { success: true };
+      } catch (error) {
+          console.error('Failed to delete job', error);
+          return { success: false, message: error.response?.data?.error || 'Failed to delete job' };
       }
   };
 
   return (
     <AuthContext.Provider value={{ 
         user, login, logout, registerUser, verifyOTP, updateSubscription, 
-        updateSeekerProfile, saveJob, applyToJob, publishJob, updateProfilePicture, loading 
+        updateSeekerProfile, saveJob, applyToJob, publishJob, updateJob, deleteJob, updateProfilePicture, loading 
     }}>
       {!loading && children}
     </AuthContext.Provider>

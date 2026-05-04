@@ -25,6 +25,7 @@ import EmployerDashboard from './pages/employer/Dashboard';
 import JobPosting from './pages/employer/JobPosting';
 import Pipeline from './pages/employer/Pipeline';
 import AssessmentBuilder from './pages/employer/AssessmentBuilder';
+import JobListings from './pages/employer/JobListings';
 
 function App() {
   return (
@@ -61,7 +62,9 @@ function App() {
         {/* Employer Routes */}
         <Route path="/employer" element={<EmployerLayout />}>
           <Route path="dashboard" element={<EmployerDashboard />} />
+          <Route path="jobs" element={<JobListings />} />
           <Route path="post-job" element={<JobPosting />} />
+          <Route path="edit-job/:id" element={<JobPosting />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="assessments" element={<AssessmentBuilder />} />
         </Route>

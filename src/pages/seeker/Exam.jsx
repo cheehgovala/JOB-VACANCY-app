@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 
 export default function Exam() {
@@ -13,64 +13,22 @@ export default function Exam() {
   const [hasStarted, setHasStarted] = useState(false);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const navigate = useNavigate();
+  const { id: applicationId } = useParams();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const examDetails = {
-    id: "frontend-basics-1",
-    name: "Frontend Basics Sandbox",
+  const [examDetails, setExamDetails] = useState({
+    name: "Assessment",
     passThreshold: 70,
     timeLimitMinutes: 20
-  };
-
-  const questions = [
-    {
-      id: 1,
-      text: "What is the primary difference between state and props in React?",
-      options: [
-        "State is meant to be passed down; props are meant to be updated",
-        "State is private to a component; props are arguments passed to it",
-        "They are completely identical concepts",
-        "State handles CSS; props handle HTML"
-      ],
-      correct: 1
-    },
-    {
-      id: 2,
-      text: "Which hook should you use to perform side effects in a function component?",
-      options: [
-        "useContext",
-        "useState",
-        "useEffect",
-        "useReducer"
-      ],
-      correct: 2
-    },
-    {
-      id: 3,
-      text: "What does JSX stand for?",
-      options: [
-        "JavaScript XML",
-        "Java Standard Extension",
-        "JavaScript Syntax Extension",
-        "JSON Syntax Extension"
-      ],
-      correct: 0
-    },
-    {
-      id: 4,
-      type: "short-answer",
-      text: "Explain the Virtual DOM in your own words briefly.",
-      maxLength: 500
-    }
-  ];
+  });
 
   // --- ANTI-CHEATING: Environment Lockdown & Proctoring ---
 
   const logViolation = async (event) => {
     console.warn(`[Proctoring] Violation detected: ${event}`);
     // In a fully integrated flow, grab the real sessionId from context or state
-    const sessionId = localStorage.getItem(`exam_session_${examDetails.id}`);
+    const sessionId = localStorage.getItem(`exam_session_${applicationId}`);
     if (!sessionId) return;
     try {
       await api.post('/assessments/log-violation', { sessionId, event });
@@ -149,7 +107,7 @@ export default function Exam() {
         context.drawImage(videoRef.current, 0, 0, 320, 240);
         const imageBase64 = canvasRef.current.toDataURL('image/jpeg', 0.5); // Compressed JPEG
         
-        const sessionId = localStorage.getItem(`exam_session_${examDetails.id}`);
+        const sessionId = localStorage.getItem(`exam_session_${applicationId}`);
         if (!sessionId) return;
         
         try {
@@ -171,7 +129,7 @@ export default function Exam() {
   // Cheating Prevention: Session Tracking & Strict Limits
   useEffect(() => {
     // Check if the user already took this exam
-    const previousScore = localStorage.getItem(`exam_score_${examDetails.id}`);
+    const previousScore = localStorage.getItem(`exam_score_${applicationId}`);
     if (previousScore !== null) {
       setScore(parseInt(previousScore, 10));
       setSubmitted(true);
@@ -179,11 +137,12 @@ export default function Exam() {
     }
 
     // Check if there is an active session
-    const activeStartTime = localStorage.getItem(`exam_start_${examDetails.id}`);
+    const activeStartTime = localStorage.getItem(`exam_start_${applicationId}`);
     if (activeStartTime) {
       setHasStarted(true);
+      const limitStr = localStorage.getItem(`exam_limit_${applicationId}`) || '20';
       const elapsedSeconds = Math.floor((Date.now() - parseInt(activeStartTime, 10)) / 1000);
-      const remainingSeconds = (examDetails.timeLimitMinutes * 60) - elapsedSeconds;
+      const remainingSeconds = (parseInt(limitStr, 10) * 60) - elapsedSeconds;
       
       if (remainingSeconds <= 0) {
         // Time expired while away
@@ -191,16 +150,13 @@ export default function Exam() {
       } else {
         setTimeLeft(remainingSeconds);
         // Load shuffled questions from storage if available
-        const savedQuestions = localStorage.getItem(`exam_questions_${examDetails.id}`);
+        const savedQuestions = localStorage.getItem(`exam_questions_${applicationId}`);
         if (savedQuestions) setShuffledQuestions(JSON.parse(savedQuestions));
-        else setShuffledQuestions(questions); // Fallback
         
         // Load saved answers
-        const savedAnswers = localStorage.getItem(`exam_answers_${examDetails.id}`);
+        const savedAnswers = localStorage.getItem(`exam_answers_${applicationId}`);
         if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
       }
-    } else {
-      setTimeLeft(examDetails.timeLimitMinutes * 60);
     }
   }, []);
 
@@ -208,7 +164,7 @@ export default function Exam() {
     if (submitted || !hasStarted) return;
     
     // Save answers to prevent data loss on refresh
-    localStorage.setItem(`exam_answers_${examDetails.id}`, JSON.stringify(answers));
+    localStorage.setItem(`exam_answers_${applicationId}`, JSON.stringify(answers));
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -224,24 +180,33 @@ export default function Exam() {
     return () => clearInterval(timer);
   }, [submitted, hasStarted, answers]);
 
-  const handleStartExam = () => {
-    // Attempt to lock into fullscreen
+  const handleStartExam = async () => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(err => {
         console.warn("Fullscreen request failed. User must interact first.", err);
       });
     }
 
-    // Cheating Prevention: Randomize Questions
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    setShuffledQuestions(shuffled);
-    
-    // Record Start Time for Session Tracking
-    localStorage.setItem(`exam_start_${examDetails.id}`, Date.now().toString());
-    localStorage.setItem(`exam_questions_${examDetails.id}`, JSON.stringify(shuffled));
-    localStorage.setItem(`exam_session_${examDetails.id}`, "mock_session_" + Date.now()); // Mock ID for demo
-    
-    setHasStarted(true);
+    try {
+      const { data } = await api.post('/assessments/start', { applicationId });
+      setExamDetails({
+        name: "Assessment",
+        timeLimitMinutes: data.timeLimitMinutes,
+        passThreshold: 70
+      });
+      setShuffledQuestions(data.questions);
+      
+      localStorage.setItem(`exam_start_${applicationId}`, Date.now().toString());
+      localStorage.setItem(`exam_limit_${applicationId}`, data.timeLimitMinutes.toString());
+      localStorage.setItem(`exam_questions_${applicationId}`, JSON.stringify(data.questions));
+      localStorage.setItem(`exam_session_${applicationId}`, data.sessionId);
+      
+      setHasStarted(true);
+      setTimeLeft(data.timeLimitMinutes * 60);
+    } catch (error) {
+      console.error("Failed to start exam", error);
+      alert("Error starting the exam: " + (error.response?.data?.error || error.message));
+    }
   };
 
   const handleSelect = (idxOrText) => {
@@ -260,41 +225,38 @@ export default function Exam() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmit = (auto = false) => {
+  const handleSubmit = async (auto = false) => {
     if (!auto && Object.keys(answers).length < shuffledQuestions.length) {
       if (!window.confirm("You have unanswered questions. Are you sure you want to submit?")) {
         return;
       }
     }
     
-    // Record End Time
-    const endTime = Date.now();
-    localStorage.setItem(`exam_end_${examDetails.id}`, endTime.toString());
+    localStorage.setItem(`exam_end_${applicationId}`, Date.now().toString());
+    const sessionId = localStorage.getItem(`exam_session_${applicationId}`);
     
-    // Calculate score (only MCQ items can be automatically graded here, just mocked logic)
-    let correctCount = 0;
-    let autoGradableCount = 0;
-    shuffledQuestions.forEach((q, i) => {
-      if (q.type !== 'short-answer') {
-        autoGradableCount++;
-        // Need to find original question to get correct answer as we shuffled
-        const origQ = questions.find(orig => orig.id === q.id);
-        if (origQ && answers[i] === origQ.correct) correctCount++;
-      }
-    });
+    try {
+       const answersPayload = {};
+       shuffledQuestions.forEach((q, i) => {
+          if (answers[i] !== undefined) {
+             answersPayload[q._id] = answers[i];
+          }
+       });
+
+       const { data } = await api.post('/assessments/submit', { sessionId, answers: answersPayload });
+       setScore(data.score);
+       localStorage.setItem(`exam_score_${applicationId}`, data.score.toString());
+    } catch (error) {
+       console.error("Failed to submit exam", error);
+       alert("Error submitting the exam: " + (error.response?.data?.error || error.message));
+    }
     
-    const finalScore = Math.round((correctCount / autoGradableCount) * 100) || 0;
-    setScore(finalScore);
+    localStorage.removeItem(`exam_start_${applicationId}`);
+    localStorage.removeItem(`exam_limit_${applicationId}`);
+    localStorage.removeItem(`exam_questions_${applicationId}`);
+    localStorage.removeItem(`exam_answers_${applicationId}`);
+    localStorage.removeItem(`exam_session_${applicationId}`);
     
-    // Cheating Prevention: Prevent Retakes
-    localStorage.setItem(`exam_score_${examDetails.id}`, finalScore.toString());
-    // Cleanup session to avoid resuming
-    localStorage.removeItem(`exam_start_${examDetails.id}`);
-    localStorage.removeItem(`exam_questions_${examDetails.id}`);
-    localStorage.removeItem(`exam_answers_${examDetails.id}`);
-    localStorage.removeItem(`exam_session_${examDetails.id}`);
-    
-    // Exit Fullscreen
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(err => console.log(err));
     }
