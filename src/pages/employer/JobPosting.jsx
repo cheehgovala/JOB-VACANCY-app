@@ -16,14 +16,13 @@ export default function JobPosting() {
   // New states for dynamic fields
   const [formData, setFormData] = useState({
     title: '',
-    department: '',
+    department: 'Technology',
     location: '',
     type: 'Full-time',
-    minSalary: '',
-    maxSalary: '',
+    salaryRange: 'Competitive',
     deadline: '',
     minQualifications: 'No minimum',
-    experience: '0 (Entry Level)',
+    experience: 'Entry Level',
     description: '',
     skills: []
   });
@@ -40,35 +39,19 @@ export default function JobPosting() {
     if (id) {
        api.get(`/jobs/${id}`).then(res => {
            const job = res.data;
-           let minS = '';
-           let maxS = '';
-           let isNeg = false;
-           
-           if (job.salary === 'Negotiable') {
-             isNeg = true;
-           } else if (job.salary && job.salary.includes('MWK')) {
-             const match = job.salary.match(/MWK (.*) - (.*)/);
-             if (match) {
-               minS = match[1];
-               maxS = match[2];
-             }
-           }
-
            setFormData({
               title: job.title || '',
-              department: job.industry || '',
+              department: job.industry || 'Technology',
               location: job.location || '',
               type: job.type || 'Full-time',
-              minSalary: minS,
-              maxSalary: maxS,
+              salaryRange: job.salary || 'Competitive',
               deadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : '',
               minQualifications: 'No minimum',
-              experience: job.experience || '0 (Entry Level)',
+              experience: job.experience || 'Entry Level',
               description: job.description || '',
               skills: job.skills || []
            });
            setAttachAssessment(job.hasAssessment || false);
-           setIsSalaryNegotiable(isNeg);
            setIsLoadingJob(false);
        }).catch(err => {
            console.error("Failed to fetch job", err);
@@ -90,28 +73,22 @@ export default function JobPosting() {
   };
 
   const handlePublish = async () => {
-    setIsPublishing(true);
-    let finalSalary = 'Competitive';
-    if (!isSalaryNegotiable && formData.minSalary && formData.maxSalary) {
-      const minS = parseInt(formData.minSalary.replace(/,/g, ''), 10);
-      if (isNaN(minS) || minS < 90000) {
-        alert("Minimum salary must be at least 90,000 MWK.");
-        setIsPublishing(false);
-        return;
-      }
-      finalSalary = `MWK ${formData.minSalary} - ${formData.maxSalary}`;
-    } else if (isSalaryNegotiable) {
-      finalSalary = 'Negotiable';
+    if (!formData.deadline) {
+      alert("Application Deadline is strictly required. Please select a deadline in Step 1.");
+      setStep(1);
+      return;
     }
+    
+    setIsPublishing(true);
 
     const jobData = {
       title: formData.title || 'New Job Listing',
       company: user?.employerProfile?.companyName || user?.employerProfile?.personal?.companyName || 'Unknown Company',
       location: formData.location || 'Remote',
       type: formData.type || 'Full-time',
-      salary: finalSalary,
+      salary: formData.salaryRange || 'Competitive',
       posted: 'Just now',
-      experience: formData.experience,
+      experience: formData.experience || 'Entry Level',
       industry: formData.department || 'Technology',
       description: formData.description || 'No description provided.',
       skills: formData.skills,
@@ -176,8 +153,14 @@ export default function JobPosting() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Department <span className="text-gray-400 font-normal">(Optional)</span></label>
-                <input type="text" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow focus:shadow-md" placeholder="e.g. Engineering, Sales" />
+                <label className="block text-sm font-bold text-gray-700 mb-2">Industry</label>
+                <select value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
+                  <option>Technology</option>
+                  <option>Design</option>
+                  <option>Finance</option>
+                  <option>Telecommunications</option>
+                  <option>Other</option>
+                </select>
               </div>
               
               <div>
@@ -199,35 +182,21 @@ export default function JobPosting() {
                   <option>Full-time</option>
                   <option>Part-time</option>
                   <option>Contract</option>
-                  <option>Remote</option>
                   <option>Internship</option>
                 </select>
               </div>
 
               <div className="md:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-bold text-gray-700">Salary Range (MWK)</label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                      checked={isSalaryNegotiable}
-                      onChange={(e) => setIsSalaryNegotiable(e.target.checked)}
-                    />
-                    <span className="text-sm font-medium text-gray-700">Negotiable</span>
-                  </label>
+                  <label className="block text-sm font-bold text-gray-700">Salary Range</label>
                 </div>
-                
-                <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${isSalaryNegotiable ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input type="text" value={formData.minSalary} onChange={e => setFormData({...formData, minSalary: e.target.value})} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none" placeholder="Min (e.g. 500,000)" disabled={isSalaryNegotiable} />
-                  </div>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input type="text" value={formData.maxSalary} onChange={e => setFormData({...formData, maxSalary: e.target.value})} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none" placeholder="Max (e.g. 1,000,000)" disabled={isSalaryNegotiable} />
-                  </div>
-                </div>
+                <select value={formData.salaryRange} onChange={e => setFormData({...formData, salaryRange: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
+                  <option>Competitive</option>
+                  <option>MWK 1.2M - 1.8M</option>
+                  <option>MWK 1.5M - 2.5M</option>
+                  <option>MWK 2.5M - 3.5M</option>
+                  <option>MWK 3.0M - 4.5M</option>
+                </select>
               </div>
 
               <div>
@@ -260,11 +229,10 @@ export default function JobPosting() {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Minimum Years of Experience</label>
                   <select value={formData.experience} onChange={e => setFormData({...formData, experience: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
-                    <option>0 (Entry Level)</option>
-                    <option>1-2 Years</option>
-                    <option>3-5 Years</option>
-                    <option>5-10 Years</option>
-                    <option>10+ Years</option>
+                    <option>Entry Level</option>
+                    <option>Mid Level</option>
+                    <option>Senior</option>
+                    <option>Executive</option>
                   </select>
                 </div>
               </div>

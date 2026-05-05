@@ -40,8 +40,8 @@ export default function JobSearch() {
         const mappedJobs = (data || []).map(j => ({
           ...j,
           id: j._id || j.id,
-          type: j.jobType || j.type || 'Full-Time',
-          experience: j.experienceLevel || j.experience || 'Entry-Level',
+          type: j.jobType || j.type || 'Full-time',
+          experience: j.experienceLevel || j.experience || 'Entry Level',
           industry: j.category || j.industry || 'Technology',
           skills: j.skills || j.requirements || [],
           match: j.match || 0,
@@ -121,11 +121,13 @@ export default function JobSearch() {
       if (searchLocation && !job.location?.toLowerCase().includes(searchLocation.toLowerCase())) return false;
 
       // Sidebar filters
-      if (filters.location.length > 0 && !filters.location.includes(job.location)) return false;
-      if (filters.type.length > 0 && !filters.type.includes(job.type)) return false;
-      if (filters.experience.length > 0 && !filters.experience.includes(job.experience)) return false;
-      if (filters.industry.length > 0 && !filters.industry.includes(job.industry)) return false;
-      if (filters.salary.length > 0 && !filters.salary.includes(job.salary)) return false;
+      if (filters.location.length > 0 && !filters.location.some(f => f.toLowerCase() === job.location?.toLowerCase())) return false;
+      if (filters.type.length > 0 && !filters.type.some(f => f.toLowerCase() === job.type?.toLowerCase())) return false;
+      if (filters.experience.length > 0 && !filters.experience.some(f => f.toLowerCase() === job.experience?.toLowerCase())) return false;
+      if (filters.industry.length > 0 && !filters.industry.some(f => f.toLowerCase() === job.industry?.toLowerCase())) return false;
+      if (filters.salary.length > 0 && !filters.salary.some(f => f.toLowerCase() === job.salary?.toLowerCase())) return false;
+
+      // Removed the 10-day old filter. We now rely on backend TTL and application deadline.
 
       // Tabs Logic
       if (activeTab === 'recommended') {
@@ -386,10 +388,10 @@ export default function JobSearch() {
                 </button>
                 <button 
                   onClick={handleApplyBtn}
-                  disabled={appliedJobIds.includes(selectedJob.id)}
-                  className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${appliedJobIds.includes(selectedJob.id) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
+                  disabled={appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline))}
+                  className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
                 >
-                  {appliedJobIds.includes(selectedJob.id) ? 'Applied' : 'Apply Now'} <ChevronRight className="w-5 h-5" />
+                  {(selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? 'Due is over' : appliedJobIds.includes(selectedJob.id) ? 'Applied' : 'Apply Now'} <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </motion.div>
