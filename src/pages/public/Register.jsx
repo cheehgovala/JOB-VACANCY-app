@@ -7,6 +7,7 @@ import { getEmailError, getPhoneError } from '../../utils/validation.js';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
+  const hasRoleParam = searchParams.has('role');
   const [role, setRole] = useState(() => {
     const roleParam = searchParams.get('role');
     return (roleParam === 'employer' || roleParam === 'seeker') ? roleParam : 'seeker';
@@ -105,30 +106,32 @@ export default function Register() {
       >
         <div className="glass px-4 py-8 sm:px-10 rounded-2xl">
           {/* Role Toggle */}
-          <div className="flex p-1 space-x-1 bg-gray-100 rounded-xl mb-8">
-            <button
-              className={`flex-1 flex justify-center items-center py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                role === 'seeker' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setRole('seeker')}
-              type="button"
-            >
-              <User className="w-4 h-4 mr-2" /> Job Seeker
-            </button>
-            <button
-              className={`flex-1 flex justify-center items-center py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                role === 'employer' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setRole('employer')}
-              type="button"
-            >
-              <Building className="w-4 h-4 mr-2" /> Employer
-            </button>
-          </div>
+          {!hasRoleParam && (
+            <div className="flex p-1 space-x-1 bg-gray-100 rounded-xl mb-8">
+              <button
+                className={`flex-1 flex justify-center items-center py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                  role === 'seeker' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setRole('seeker')}
+                type="button"
+              >
+                <User className="w-4 h-4 mr-2" /> Job Seeker
+              </button>
+              <button
+                className={`flex-1 flex justify-center items-center py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                  role === 'employer' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setRole('employer')}
+                type="button"
+              >
+                <Building className="w-4 h-4 mr-2" /> Employer
+              </button>
+            </div>
+          )}
 
           <form className="space-y-5" onSubmit={handleRegister}>
             {role === 'employer' ? (

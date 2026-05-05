@@ -23,15 +23,33 @@ export default function Exam() {
     timeLimitMinutes: 20
   });
 
+  const [violationWarning, setViolationWarning] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
+  const [violationMessage, setViolationMessage] = useState("");
+  const [webcamEnabled, setWebcamEnabled] = useState(false);
+
   // --- ANTI-CHEATING: Environment Lockdown & Proctoring ---
 
   const logViolation = async (event) => {
     console.warn(`[Proctoring] Violation detected: ${event}`);
-    // In a fully integrated flow, grab the real sessionId from context or state
     const sessionId = localStorage.getItem(`exam_session_${applicationId}`);
     if (!sessionId) return;
     try {
-      await api.post('/assessments/log-violation', { sessionId, event });
+      const { data } = await api.post('/assessments/log-violation', { sessionId, event });
+      
+      let eventMsg = "You left the exam environment.";
+      if (event === 'TAB_SWITCHED') eventMsg = "You switched to another tab.";
+      if (event === 'WINDOW_BLURRED') eventMsg = "You clicked outside the exam window.";
+      if (event === 'EXITED_FULLSCREEN') eventMsg = "You exited full-screen mode.";
+
+      if (data.isFlagged) {
+        alert("Maximum violations reached. Your exam has been flagged and submitted automatically.");
+        handleSubmit(true);
+      } else {
+        setViolationCount(data.violationCount || 0);
+        setViolationMessage(eventMsg);
+        setViolationWarning(true);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -89,13 +107,16 @@ export default function Exam() {
     // Start Webcam
     const startWebcam = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (!videoRef.current?.srcObject) {
+           const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+           if (videoRef.current) {
+             videoRef.current.srcObject = stream;
+           }
+           setWebcamEnabled(true);
         }
       } catch (err) {
         console.error("Webcam access denied", err);
-        alert("Webcam access is strictly required to prevent cheating.");
+        alert("Webcam access is strictly required to prevent cheating. Please allow access and refresh the page.");
       }
     };
     startWebcam();
@@ -189,11 +210,49 @@ export default function Exam() {
     return () => clearInterval(timer);
   }, [submitted, hasStarted, answers]);
 
+  useEffect(() => {
+    // Fetch real exam details before starting so instructions are accurate
+    if (!hasStarted && !submitted) {
+      const fetchDetails = async () => {
+        try {
+          const { data } = await api.get(`/assessments/details/${applicationId}`);
+          setExamDetails({
+            name: data.title,
+            timeLimitMinutes: data.timeLimitMinutes,
+            passThreshold: data.passThreshold,
+            questionCount: data.questionCount
+          });
+        } catch (error) {
+          console.error("Failed to fetch exam details", error);
+        }
+      };
+      fetchDetails();
+    }
+  }, [hasStarted, submitted, applicationId]);
+
   const handleStartExam = async () => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.warn("Fullscreen request failed. User must interact first.", err);
-      });
+    // 1. Request Webcam Access First
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setWebcamEnabled(true);
+    } catch (err) {
+      console.error("Webcam access denied", err);
+      alert("Webcam access is strictly required to prevent cheating. Please allow webcam access and try again.");
+      return; // Stop execution
+    }
+
+    // 2. Request Fullscreen
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn("Fullscreen request failed", err);
+      alert("Full-screen mode is required to take this exam. Please allow full-screen.");
+      return; // Stop execution
     }
 
     try {
@@ -227,6 +286,17 @@ export default function Exam() {
   const nextQuestion = () => {
     if (currentQuestion < shuffledQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const handleReturnToExam = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+      setViolationWarning(false);
+    } catch (err) {
+      alert("You must allow full-screen to continue.");
     }
   };
 
@@ -333,7 +403,9 @@ export default function Exam() {
           <div className="space-y-4 mb-8">
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
               <span className="text-gray-600 font-medium">Questions</span>
-              <span className="font-bold text-gray-900">{shuffledQuestions.length > 0 ? shuffledQuestions.length : 'Various'}</span>
+              <span className="font-bold text-gray-900">
+                {shuffledQuestions.length > 0 ? shuffledQuestions.length : (examDetails.questionCount || 'Various')}
+              </span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
               <span className="text-gray-600 font-medium">Time Limit</span>
@@ -366,6 +438,32 @@ export default function Exam() {
       {/* Hidden Media Elements for Proctoring */}
       <video ref={videoRef} autoPlay playsInline muted className="hidden" />
       <canvas ref={canvasRef} width="320" height="240" className="hidden" />
+
+      {/* Violation Warning Overlay */}
+      {violationWarning && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-red-500"
+          >
+            <AlertTriangle className="w-20 h-20 text-red-600 mx-auto mb-6" />
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Proctoring Warning</h2>
+            <p className="text-xl font-bold text-red-600 mb-4">{violationMessage}</p>
+            <p className="text-gray-600 mb-6 font-medium">
+              Leaving the exam environment, switching tabs, or exiting full-screen is strictly prohibited. 
+              You have used <span className="font-bold text-red-600">{violationCount} of 2</span> allowed warnings. 
+              Exceeding this limit will result in an automatic failure.
+            </p>
+            <button 
+              onClick={handleReturnToExam}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg text-lg"
+            >
+              I Understand, Return to Exam
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       {/* Exam Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
@@ -410,18 +508,18 @@ export default function Exam() {
               </h2>
               
               <div className="space-y-4 max-w-2xl mx-auto w-full">
-                {shuffledQuestions[currentQuestion].type === 'short-answer' ? (
+                {shuffledQuestions[currentQuestion].type === 'text' ? (
                   <div className="flex flex-col gap-2">
                     <textarea
                       className="w-full p-4 border-2 border-gray-200 rounded-2xl resize-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none"
                       rows={6}
                       placeholder="Type your answer here..."
-                      maxLength={shuffledQuestions[currentQuestion].maxLength}
+                      maxLength={1000}
                       value={answers[currentQuestion] || ""}
                       onChange={(e) => handleSelect(e.target.value)}
                     />
                     <div className="text-right text-sm text-gray-400 font-medium">
-                      {(answers[currentQuestion] || "").length} / {shuffledQuestions[currentQuestion].maxLength} characters
+                      {(answers[currentQuestion] || "").length} / 1000 characters
                     </div>
                   </div>
                 ) : (

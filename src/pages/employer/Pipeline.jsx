@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import CandidateProfileModal from '../../components/CandidateProfileModal';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
+import { getImageUrl } from '../../utils/imageUtils';
 
 export default function Pipeline() {
   const [searchParams] = useSearchParams();
@@ -39,7 +40,7 @@ export default function Pipeline() {
           return {
             id: app._id,
             name: personal.fullName || app.applicantId?.name || 'Unknown Candidate',
-            photo: app.applicantId?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(personal.fullName || app.applicantId?.name || 'U')}`,
+            photo: getImageUrl(app.applicantId?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(personal.fullName || app.applicantId?.name || 'U')}`,
             score: app.matchScore || 0,
             examScore: app.assessmentSessionId?.isCompleted ? app.assessmentSessionId.score : null,
             isFlagged: app.assessmentSessionId?.isFlagged || false,

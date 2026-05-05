@@ -73,12 +73,30 @@ export function AuthProvider({ children }) {
         setUser(res.data.user || res.data);
         return { success: true, user: res.data.user || res.data };
       }
-      return { success: false, message: 'Invalid credentials.' };
+      return { success: false, message: 'Invalid credential' };
     } catch (error) {
-      return { success: false, message: error.response?.data?.error || 'Invalid credentials.' };
+      return { success: false, message: error.response?.data?.error || 'Invalid credential' };
     }
   };
   
+  const forgotPassword = async (email) => {
+    try {
+      const res = await api.post('/auth/forgot-password', { email });
+      return { success: true, message: res.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.error || 'Failed to send OTP.' };
+    }
+  };
+
+  const resetPassword = async (email, otp, newPassword) => {
+    try {
+      const res = await api.post('/auth/reset-password', { email, otp, newPassword });
+      return { success: true, message: res.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.error || 'Failed to reset password.' };
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('talent_mw_token');
@@ -174,7 +192,8 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ 
         user, login, logout, registerUser, verifyOTP, updateSubscription, 
-        updateSeekerProfile, saveJob, applyToJob, publishJob, updateJob, deleteJob, updateProfilePicture, loading 
+        updateSeekerProfile, saveJob, applyToJob, publishJob, updateJob, deleteJob, updateProfilePicture, loading,
+        forgotPassword, resetPassword
     }}>
       {!loading && children}
     </AuthContext.Provider>

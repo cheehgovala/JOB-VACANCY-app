@@ -93,6 +93,12 @@ export default function JobPosting() {
     setIsPublishing(true);
     let finalSalary = 'Competitive';
     if (!isSalaryNegotiable && formData.minSalary && formData.maxSalary) {
+      const minS = parseInt(formData.minSalary.replace(/,/g, ''), 10);
+      if (isNaN(minS) || minS < 90000) {
+        alert("Minimum salary must be at least 90,000 MWK.");
+        setIsPublishing(false);
+        return;
+      }
       finalSalary = `MWK ${formData.minSalary} - ${formData.maxSalary}`;
     } else if (isSalaryNegotiable) {
       finalSalary = 'Negotiable';

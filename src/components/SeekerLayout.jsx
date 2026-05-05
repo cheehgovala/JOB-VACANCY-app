@@ -3,6 +3,7 @@ import { Briefcase, FileText, CheckCircle, Clock, Search, Bell, Menu, X, Star, C
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/imageUtils';
 import api from '../api/axios';
 
 export default function SeekerLayout() {
@@ -244,7 +245,7 @@ export default function SeekerLayout() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {user?.profilePicture ? (
-                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(user.profilePicture)} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     (user?.seekerProfile?.personal?.fullName || user?.name || 'Seeker').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
                   )}

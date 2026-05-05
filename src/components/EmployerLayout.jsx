@@ -2,6 +2,7 @@ import { Building, Users, FileBarChart, Bell, Menu, X, CheckSquare, LogOut } fro
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 export default function EmployerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,7 +93,7 @@ export default function EmployerLayout() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 font-bold overflow-hidden">
                   {user?.profilePicture || user?.employerProfile?.companyLogo ? (
-                    <img src={user.profilePicture || user.employerProfile.companyLogo} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(user.profilePicture || user.employerProfile.companyLogo)} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     user?.name ? user.name.substring(0,2).toUpperCase() : "EM"
                   )}

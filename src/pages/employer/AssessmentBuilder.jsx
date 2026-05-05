@@ -6,7 +6,7 @@ import api from '../../api/axios';
 
 export default function AssessmentBuilder() {
   const [questions, setQuestions] = useState([
-    { id: 1, type: 'mcq', text: 'Which hooks are built into React?', options: ['useState and useEffect', 'useFetch and useData', 'useReact and useComponent', 'useRouter and useHistory'], correct: 0 },
+    { id: 1, type: 'mcq', text: 'Which hooks are built into React?', options: ['useState and useEffect', 'useFetch and useData', 'useReact and useComponent', 'useRouter and useHistory'], correct: 0, correctAnswer: '' },
   ]);
   const [examName, setExamName] = useState('Frontend Engineering Exam');
   const [timeLimit, setTimeLimit] = useState(20);
@@ -30,7 +30,8 @@ export default function AssessmentBuilder() {
     // Transform questions format to match backend model
     const formattedQuestions = questions.map(q => ({
        text: q.text,
-       options: q.type === 'text' ? ['N/A'] : q.options,
+       type: q.type,
+       options: q.type === 'text' ? [q.correctAnswer || ''] : q.options,
        correctOptionIndex: q.correct || 0
     }));
 
@@ -57,7 +58,7 @@ export default function AssessmentBuilder() {
   };
 
   const addQuestion = () => {
-    setQuestions([...questions, { id: Date.now(), type: 'mcq', text: '', options: ['', '', '', ''], correct: 0 }]);
+    setQuestions([...questions, { id: Date.now(), type: 'mcq', text: '', options: ['', '', '', ''], correct: 0, correctAnswer: '' }]);
   };
 
   const removeQuestion = (id) => {
@@ -73,6 +74,8 @@ export default function AssessmentBuilder() {
     } else if (newType === 'mcq') {
       newQ[index].options = ['', '', '', ''];
       newQ[index].correct = 0;
+    } else if (newType === 'text') {
+      newQ[index].correctAnswer = '';
     }
     setQuestions(newQ);
   };
@@ -197,13 +200,18 @@ export default function AssessmentBuilder() {
 
                   {q.type === 'text' && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
-                      <p className="text-sm font-medium text-gray-500 mb-3">Short text answers will be manually reviewed by your team.</p>
-                      <textarea 
-                        disabled 
-                        rows={3} 
-                        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-400 resize-none cursor-not-allowed" 
-                        placeholder="Candidate will type their answer here..."
-                      ></textarea>
+                      <p className="text-sm font-medium text-gray-500 mb-3">Provide the correct answer. The candidate must match this exactly (case-insensitive).</p>
+                      <input 
+                        type="text"
+                        value={q.correctAnswer || ''}
+                        onChange={(e) => {
+                          const newQ = [...questions];
+                          newQ[index].correctAnswer = e.target.value;
+                          setQuestions(newQ);
+                        }}
+                        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-primary-500 focus:border-primary-500 outline-none" 
+                        placeholder="Correct answer..."
+                      />
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { Award, Briefcase, CheckCircle, Download, FileText, GraduationCap, MapPin, Target, X } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 export default function CandidateProfileModal({ isOpen, onClose, candidate, onStatusChange }) {
   if (!isOpen || !candidate) return null;
@@ -42,7 +43,7 @@ export default function CandidateProfileModal({ isOpen, onClose, candidate, onSt
           {/* Header */}
           <div className="bg-white px-6 py-6 border-b border-gray-100 flex items-start justify-between shrink-0">
             <div className="flex gap-5 items-center">
-              <img src={candidate.photo} alt={candidate.name} className="w-20 h-20 rounded-2xl object-cover shadow-sm border border-gray-100" />
+              <img src={getImageUrl(candidate.photo)} alt={candidate.name} className="w-20 h-20 rounded-2xl object-cover shadow-sm border border-gray-100" />
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{candidate.name}</h2>
                 <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600 font-medium">
