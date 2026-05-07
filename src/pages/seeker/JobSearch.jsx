@@ -25,8 +25,7 @@ export default function JobSearch() {
     location: [],
     type: [],
     experience: [],
-    industry: [],
-    salary: []
+    industry: []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,7 +124,6 @@ export default function JobSearch() {
       if (filters.type.length > 0 && !filters.type.some(f => f.toLowerCase() === job.type?.toLowerCase())) return false;
       if (filters.experience.length > 0 && !filters.experience.some(f => f.toLowerCase() === job.experience?.toLowerCase())) return false;
       if (filters.industry.length > 0 && !filters.industry.some(f => f.toLowerCase() === job.industry?.toLowerCase())) return false;
-      if (filters.salary.length > 0 && !filters.salary.some(f => f.toLowerCase() === job.salary?.toLowerCase())) return false;
 
       // Removed the 10-day old filter. We now rely on backend TTL and application deadline.
 
@@ -187,17 +185,7 @@ export default function JobSearch() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Salary Range</h3>
-              <div className="space-y-2">
-                {['Competitive', 'MWK 1.2M - 1.8M', 'MWK 1.5M - 2.5M', 'MWK 2.5M - 3.5M', 'MWK 3.0M - 4.5M'].map((sal) => (
-                  <label key={sal} className="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" checked={filters.salary.includes(sal)} onChange={() => handleFilterChange('salary', sal)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{sal}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+
             
           </div>
         </div>

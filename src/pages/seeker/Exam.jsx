@@ -417,9 +417,40 @@ export default function Exam() {
             </div>
           </div>
           
-          <div className="bg-amber-50 rounded-xl p-4 flex gap-3 mb-8 border border-amber-100 text-amber-800">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">This exam can only be attempted once. Ensure you have a stable internet connection and enough time before starting.</p>
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-8 space-y-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-primary-600" />
+                Anti-Cheating & Proctoring Rules
+              </h3>
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
+                  <span><b>Webcam Required:</b> Your webcam must remain enabled. Automated snapshots will be taken randomly to verify your identity.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
+                  <span><b>Full-Screen Mode:</b> The exam must be taken in full-screen. Exiting full-screen will trigger a violation warning.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
+                  <span><b>Lockdown Environment:</b> Switching tabs, minimizing the window, or clicking outside the exam area is strictly prohibited.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
+                  <span><b>Violation Limit:</b> You are allowed a maximum of <b>2 violations</b>. The 3rd violation will result in <b>automatic failure</b> and immediate submission.</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
+                  <span><b>Strict Controls:</b> Right-clicking, copying, and pasting have been disabled within the exam environment.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-amber-50 rounded-xl p-4 flex gap-3 border border-amber-100 text-amber-800">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <p className="text-xs font-medium">This exam is a <b>one-time attempt</b>. Ensure you have a stable internet connection and a quiet environment before you begin. Once started, the timer cannot be paused.</p>
+            </div>
           </div>
           
           <button 

@@ -182,15 +182,15 @@ export default function JobPosting() {
 
               <div className="md:col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-bold text-gray-700">Salary Range</label>
+                  <label className="block text-sm font-bold text-gray-700">Salary (e.g. MWK 1.5M - 2.5M or Competitive)</label>
                 </div>
-                <select value={formData.salaryRange} onChange={e => setFormData({...formData, salaryRange: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
-                  <option>Competitive</option>
-                  <option>MWK 1.2M - 1.8M</option>
-                  <option>MWK 1.5M - 2.5M</option>
-                  <option>MWK 2.5M - 3.5M</option>
-                  <option>MWK 3.0M - 4.5M</option>
-                </select>
+                <input 
+                  type="text" 
+                  value={formData.salaryRange} 
+                  onChange={e => setFormData({...formData, salaryRange: e.target.value})} 
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white transition-shadow focus:shadow-md" 
+                  placeholder="e.g. MWK 1.5M - 2.5M or Negotiable"
+                />
               </div>
 
               <div>
