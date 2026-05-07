@@ -10,7 +10,7 @@ export default function Footer() {
             <Link to="/" className="flex items-center gap-2">
               <Briefcase className="h-8 w-8 text-primary-500" />
               <span className="font-bold text-xl tracking-tight text-white">
-                Talent<span className="text-primary-500">Mw</span>
+                Smart Hire<span className="text-primary-500"> Malawi</span>
               </span>
             </Link>
             <p className="text-sm text-gray-400">
@@ -47,7 +47,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500 font-medium">
-          &copy; {new Date().getFullYear()} TalentMw. All rights reserved.
+          &copy; {new Date().getFullYear()} Smart Hire Malawi. All rights reserved.
         </div>
       </div>
     </footer>

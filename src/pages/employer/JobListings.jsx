@@ -66,9 +66,7 @@ export default function JobListings() {
               className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                  <Briefcase className="w-6 h-6" />
-                </div>
+                <div className="flex-1"></div>
                 {new Date() > new Date(job.applicationDeadline) ? (
                   <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Expired</span>
                 ) : (

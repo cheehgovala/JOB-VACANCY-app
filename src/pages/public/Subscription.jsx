@@ -29,7 +29,7 @@ export default function Subscription() {
           Choose Your Plan
         </h2>
         <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-          Unlock core features and get full access to the TalentMw platform.
+          Join over 10,000 professionals using Smart Hire Malawi to advance their careers.
         </p>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">

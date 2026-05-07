@@ -56,8 +56,9 @@ export default function PaymentSuccess() {
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
             Payment Successful!
           </h2>
+          <p className="text-gray-500 mt-2">Welcome to Smart Hire Malawi Premium.</p>
           <p className="text-gray-500 mb-8">
-            Your subscription is now active. You have full access to TalentMw features.
+            Your subscription is now active. You have full access to Smart Hire Malawi features.
           </p>
 
           <div className="bg-yellow-50 rounded-xl p-4 flex items-start text-left border border-yellow-200 mb-8">

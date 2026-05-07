@@ -73,12 +73,6 @@ export default function JobPosting() {
   };
 
   const handlePublish = async () => {
-    if (!formData.deadline) {
-      alert("Application Deadline is strictly required. Please select a deadline in Step 1.");
-      setStep(1);
-      return;
-    }
-    
     setIsPublishing(true);
 
     const jobData = {

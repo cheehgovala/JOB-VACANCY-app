@@ -131,9 +131,6 @@ export default function Applications() {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-                          <Briefcase className="w-5 h-5 text-primary-600" />
-                        </div>
                         <span className="font-bold text-gray-900">{app.job}</span>
                       </div>
                     </td>
@@ -199,10 +196,7 @@ export default function Applications() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-4">
                   {recommendedJobs.map(job => (
                     <div key={job.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-                      <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600 mb-4 group-hover:scale-110 transition-transform">
-                        <Briefcase className="w-6 h-6" />
-                      </div>
-                      <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors leading-tight mb-1">{job.title}</h4>
+                      <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors leading-tight mb-1 mt-2">{job.title}</h4>
                       <p className="text-sm font-medium text-gray-500 mb-4">{job.company}</p>
                       
                       <div className="space-y-2 mb-6">

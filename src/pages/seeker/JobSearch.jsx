@@ -272,46 +272,46 @@ export default function JobSearch() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => setSelectedJob(job)}
-              className={`bg-white border text-left rounded-2xl p-5 hover:shadow-md cursor-pointer transition-all group flex flex-col sm:flex-row gap-6 relative overflow-hidden ${job.isPremium ? 'border-yellow-400 bg-yellow-50/10' : 'border-gray-100 hover:border-primary-200'}`}
+              className={`bg-white border text-left rounded-xl p-5 hover:shadow-md cursor-pointer transition-all flex flex-col gap-3 relative ${job.isPremium ? 'border-primary-200 bg-blue-50/10' : 'border-gray-200 hover:border-gray-300'}`}
             >
-              {activeTab === 'recommended' && <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>}
-              {job.isPremium && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900"/> FEATURED</div>}
+              {activeTab === 'recommended' && <div className="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-xl"></div>}
               
-              <div className={`w-16 h-16 rounded-xl border flex items-center justify-center flex-shrink-0 ${job.isPremium ? 'bg-yellow-100 border-yellow-200' : 'bg-gray-50 border-gray-100'}`}>
-                {job.isPremium ? <Building2 className="w-8 h-8 text-yellow-600" /> : <Briefcase className="w-8 h-8 text-gray-400 group-hover:text-primary-500 transition-colors" />}
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 hover:underline">{job.title}</h3>
+                  <p className="text-gray-800 text-sm mt-1 font-medium">{job.company || 'Unknown Company'}</p>
+                  <p className="text-gray-600 text-sm">{job.location}</p>
+                </div>
               </div>
 
-              <div className="flex-1 flex flex-col justify-between pt-1">
-                <div>
-                  <div className="flex justify-between items-start mb-1 pr-16 sm:pr-0">
-                    <h3 className={`text-lg font-bold group-hover:text-primary-700 transition-colors ${job.isPremium ? 'text-yellow-900' : 'text-gray-900'}`}>{job.title}</h3>
-                    {activeTab === 'recommended' && job.match && (
-                      <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                        {job.match}% Match
+              <div className="flex flex-wrap gap-2 text-sm text-gray-700 mt-1">
+                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold">{job.salary}</span>
+                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold">{job.type}</span>
+              </div>
+
+              <div className="mt-2 text-sm text-gray-600 line-clamp-2">
+                {job.description || 'Click to view details for this role.'}
+              </div>
+              
+              <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                  <span>{job.posted}</span>
+                  {job.hasAssessment && (
+                    <>
+                      <span>•</span>
+                      <span className="text-primary-700 font-bold flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Assessment Required
                       </span>
-                    )}
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">{job.company || 'Unknown Company'}</p>
-                  
-                  <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-2">
-                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg"><MapPin className="w-4 h-4"/> {job.location}</span>
-                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg"><Briefcase className="w-4 h-4"/> {job.type}</span>
-                    <span className="flex items-center gap-1.5 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-lg">{job.salary}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>Posted {job.posted}</span>
-                    {job.hasAssessment && (
-                      <>
+                    </>
+                  )}
+                  {activeTab === 'recommended' && job.match && (
+                     <>
                         <span>•</span>
-                        <span className="flex items-center gap-1 text-primary-600 font-medium">
-                          <CheckCircle className="w-3.5 h-3.5" /> Assessment Required
+                        <span className="text-green-700 font-bold">
+                          {job.match}% Match
                         </span>
-                      </>
-                    )}
-                  </div>
+                     </>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -391,7 +391,7 @@ export default function JobSearch() {
                   disabled={appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline))}
                   className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
                 >
-                  {(selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? 'Due is over' : appliedJobIds.includes(selectedJob.id) ? 'Applied' : 'Apply Now'} <ChevronRight className="w-5 h-5" />
+                  {(selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? "You can't apply, due is over" : appliedJobIds.includes(selectedJob.id) ? 'Applied' : 'Apply Now'} <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </motion.div>

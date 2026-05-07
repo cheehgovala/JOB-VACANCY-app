@@ -90,58 +90,8 @@ export default function EmployerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Active Job Listings / Applications */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-gray-900">Recent Applications</h2>
-              <Link to="/employer/pipeline" className="text-sm font-bold text-primary-600 hover:text-primary-700">View Pipeline</Link>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="text-xs text-gray-500 uppercase font-semibold border-b border-gray-100">
-                  <tr>
-                    <th className="pb-3 pr-4">Applicant & Role</th>
-                    <th className="pb-3 px-4 text-center">Completeness</th>
-                    <th className="pb-3 px-4 text-center">Date</th>
-                    <th className="pb-3 pl-4 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {applications && applications.length > 0 ? applications.map((app, i) => (
-                    <tr key={i} className="hover:bg-gray-50/50 transition-colors cursor-pointer">
-                      <td className="py-4 pr-4">
-                        <p className="font-bold text-gray-900">{app.applicantId?.name || app.applicantName || 'Applicant'}</p>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Briefcase className="w-3.5 h-3.5"/> Applied for: {app.jobId?.title || app.jobTitle}</p>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-sm">
-                          {app.applicantId?.seekerProfile?.completeness || app.applicantProfile?.completeness || 0}%
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center text-sm font-medium text-gray-600">
-                        {new Date(app.appliedAt || app.date).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 pl-4 text-right">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                          {app.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="4" className="py-8 text-center text-gray-500 text-sm">No applications received yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
         {/* Action Panel */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-span-3">
           <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 shadow-md relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-10 translate-x-10"></div>
             <div className="relative z-10 text-white">

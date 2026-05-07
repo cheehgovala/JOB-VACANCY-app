@@ -76,11 +76,9 @@ export default function Pipeline() {
     fetchCandidates();
   }, []);
 
-  // Derive sorted & filtered list
   const filteredCandidates = useMemo(() => {
     return mockCandidates
       .filter(c => jobIdFilter ? c.jobId === jobIdFilter : true)
-      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
       .filter(c => (c.examScore || 0) >= minExamScore)
       .filter(c => locationDistrict ? c.district.toLowerCase() === locationDistrict.toLowerCase() : true)
       .filter(c => qualificationLevel ? c.qualification.toLowerCase().includes(qualificationLevel.toLowerCase()) : true)
@@ -108,7 +106,7 @@ export default function Pipeline() {
         const totalB = b.score + (b.examScore || 0);
         return totalB - totalA;
       });
-  }, [searchQuery, minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels, mockCandidates, jobIdFilter]);
+  }, [minExamScore, locationDistrict, qualificationLevel, dateRange, experienceLevels, mockCandidates, jobIdFilter]);
 
   const receivedCount = filteredCandidates.length;
   const reviewedCount = filteredCandidates.filter(c => c.status === 'Under Review' || c.status === 'Reviewed').length;
@@ -159,20 +157,6 @@ export default function Pipeline() {
           </div>
           
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Search Name</label>
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input 
-                  type="text" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="e.g. Kondwani..." 
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none text-sm" 
-                />
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Job Listing</label>
               <select value={jobIdFilter} onChange={(e) => setJobIdFilter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
@@ -250,7 +234,6 @@ export default function Pipeline() {
             <button 
               onClick={() => {
                 setJobIdFilter('');
-                setSearchQuery('');
                 setMinExamScore(0);
                 setLocationDistrict('');
                 setExperienceLevels([]);

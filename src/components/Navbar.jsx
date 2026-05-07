@@ -12,7 +12,7 @@ export default function Navbar() {
                 <Briefcase className="h-6 w-6 text-white" />
               </div>
               <span className="font-extrabold text-2xl tracking-tighter text-white">
-                Talent<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400">Mw</span>
+                Smart Hire<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-purple-400"> Malawi</span>
               </span>
             </Link>
           </div>

@@ -35,7 +35,12 @@ export default function CVBuilder() {
   });
 
   useEffect(() => {
-    if (user?.seekerProfile) {
+    const savedDraft = localStorage.getItem('cvDraft');
+    if (savedDraft) {
+      try {
+        setFormData(JSON.parse(savedDraft));
+      } catch(e) {}
+    } else if (user?.seekerProfile) {
       const sp = user.seekerProfile;
       setFormData({
         personal: {
@@ -73,6 +78,10 @@ export default function CVBuilder() {
       }));
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('cvDraft', JSON.stringify(formData));
+  }, [formData]);
 
   const uploadFile = async (file) => {
     const dataForm = new FormData();
@@ -157,7 +166,7 @@ export default function CVBuilder() {
     setTimeout(() => setCopiedLink(false), 3000);
   };
 
-  const generatePDF = () => {
+  const generatePDFDoc = () => {
     const doc = new jsPDF();
     let currentY = 30;
 
@@ -286,7 +295,16 @@ export default function CVBuilder() {
       });
     }
 
-    doc.save('my-ats-cv.pdf');
+    return doc;
+  };
+
+  const downloadPDF = () => {
+    generatePDFDoc().save('my-ats-cv.pdf');
+  };
+
+  const previewPDF = () => {
+    const doc = generatePDFDoc();
+    window.open(doc.output('bloburl'), '_blank');
   };
 
   const stepsList = [
@@ -300,6 +318,63 @@ export default function CVBuilder() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <datalist id="institutions-list">
+        <option value="University of Malawi (UNIMA)" />
+        <option value="Malawi University of Business and Applied Sciences (MUBAS)" />
+        <option value="Lilongwe University of Agriculture and Natural Resources (LUANAR)" />
+        <option value="Mzuzu University (MZUNI)" />
+        <option value="Malawi University of Science and Technology (MUST)" />
+        <option value="Kamuzu University of Health Sciences (KUHeS)" />
+        <option value="Catholic University of Malawi (CUNIMA)" />
+        <option value="Malawi Adventist University (MAU)" />
+        <option value="Pentecostal Life University (PLU)" />
+        <option value="Nkhoma University (NKHUNI)" />
+        <option value="Blantyre International University (BIU)" />
+        <option value="University of Livingstonia (UNILIA)" />
+        <option value="Malawi Assemblies of God University (MAGU)" />
+        <option value="Exploits University" />
+        <option value="ShareWORLD Open University" />
+        <option value="DMI St John the Baptist University" />
+        <option value="Unicaf University" />
+      </datalist>
+
+      <datalist id="job-titles-list">
+        <option value="Software Engineer" />
+        <option value="Project Manager" />
+        <option value="Accountant" />
+        <option value="Teacher" />
+        <option value="Nurse" />
+        <option value="Sales Representative" />
+        <option value="Marketing Manager" />
+        <option value="Human Resources Manager" />
+        <option value="Administrative Assistant" />
+        <option value="Business Analyst" />
+        <option value="Data Analyst" />
+        <option value="Customer Service Representative" />
+      </datalist>
+
+      <datalist id="companies-list">
+        <option value="Airtel Malawi" />
+        <option value="TNM" />
+        <option value="Standard Bank Malawi" />
+        <option value="National Bank of Malawi" />
+        <option value="FDH Bank" />
+        <option value="Illovo Sugar Malawi" />
+        <option value="Castel Malawi" />
+        <option value="Puma Energy" />
+        <option value="Malawi Revenue Authority (MRA)" />
+        <option value="NBS Bank" />
+      </datalist>
+
+      <datalist id="duration-list">
+        <option value="2023 - Present" />
+        <option value="2022 - Present" />
+        <option value="2021 - Present" />
+        <option value="2020 - Present" />
+        <option value="2019 - Present" />
+        <option value="2018 - Present" />
+      </datalist>
+
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Digital CV Builder</h1>
@@ -414,6 +489,7 @@ export default function CVBuilder() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
                     <input 
+                      list="job-titles-list"
                       type="text" 
                       value={exp.title}
                       onChange={(e) => {
@@ -428,6 +504,7 @@ export default function CVBuilder() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
                     <input 
+                      list="companies-list"
                       type="text" 
                       value={exp.company}
                       onChange={(e) => {
@@ -442,6 +519,7 @@ export default function CVBuilder() {
                   <div className="col-span-1 md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
                     <input 
+                      list="duration-list"
                       type="text" 
                       value={exp.duration}
                       onChange={(e) => {
@@ -498,6 +576,7 @@ export default function CVBuilder() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
                   <input 
+                    list="institutions-list"
                     type="text" 
                     value={edu.institution}
                     onChange={(e) => {
@@ -511,16 +590,20 @@ export default function CVBuilder() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-                  <input 
-                    type="text" 
+                  <select 
                     value={edu.year}
                     onChange={(e) => {
                       const newEdu = [...formData.education];
                       newEdu[i].year = e.target.value;
                       setFormData({ ...formData, education: newEdu });
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. 2023" />
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
+                  >
+                    <option value="">Select Year</option>
+                    {Array.from({length: 40}, (_, i) => new Date().getFullYear() + 5 - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             ))}
@@ -565,16 +648,20 @@ export default function CVBuilder() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                  <input 
-                    type="text" 
+                  <select 
                     value={cert.year}
                     onChange={(e) => {
                       const newCerts = [...formData.certifications];
                       newCerts[i].year = e.target.value;
                       setFormData({ ...formData, certifications: newCerts });
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. 2022" />
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
+                  >
+                    <option value="">Select Year</option>
+                    {Array.from({length: 40}, (_, i) => new Date().getFullYear() + 5 - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="col-span-1 md:col-span-2 pt-2">
                 </div>
@@ -679,10 +766,16 @@ export default function CVBuilder() {
                   {copiedLink ? 'Link Copied!' : 'Share Link'}
                 </button>
                 <button 
-                  onClick={generatePDF}
+                  onClick={previewPDF}
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-semibold transition-all shadow-sm"
+                >
+                  <FileText className="w-5 h-5" /> Preview
+                </button>
+                <button 
+                  onClick={downloadPDF}
                   className="flex items-center justify-center gap-2 w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md shadow-primary-500/20"
                 >
-                  <Download className="w-5 h-5" /> Download PDF
+                  <Download className="w-5 h-5" /> Download
                 </button>
               </div>
             </div>

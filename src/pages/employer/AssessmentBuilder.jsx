@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, GripVertical, Plus, Settings, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
@@ -10,7 +10,9 @@ export default function AssessmentBuilder() {
   ]);
   const [examName, setExamName] = useState('Frontend Engineering Exam');
   const [timeLimit, setTimeLimit] = useState(20);
+  const [timeLimitError, setTimeLimitError] = useState('');
   const [passScore, setPassScore] = useState(70);
+  const [passScoreError, setPassScoreError] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -19,9 +21,66 @@ export default function AssessmentBuilder() {
   const navigate = useNavigate();
   const jobId = searchParams.get('jobId');
 
+  useEffect(() => {
+    if (jobId) {
+      api.get(`/assessments/exams/${jobId}`)
+        .then(res => {
+          if (res.data) {
+            setExamName(res.data.title || 'Frontend Engineering Exam');
+            setTimeLimit(res.data.timeLimitMinutes || 20);
+            setPassScore(res.data.passThreshold || 70);
+            if (res.data.questions && res.data.questions.length > 0) {
+              const formattedQ = res.data.questions.map((q, i) => ({
+                id: q._id || Date.now() + i,
+                type: q.type,
+                text: q.text,
+                options: q.type === 'text' ? ['', '', '', ''] : (q.options?.length ? q.options : ['', '', '', '']),
+                correct: q.type !== 'text' ? q.correctOptionIndex : 0,
+                correctAnswer: q.type === 'text' ? (q.options && q.options[0] ? q.options[0] : '') : ''
+              }));
+              setQuestions(formattedQ);
+            }
+          }
+        })
+        .catch(err => {
+           if (err.response?.status !== 404) {
+              console.error("Failed to load existing exam", err);
+           }
+        });
+    }
+  }, [jobId]);
+
+  const handleTimeLimitChange = (e) => {
+    const val = e.target.value;
+    if (val === '') { setTimeLimit(''); setTimeLimitError(''); return; }
+    if (!/^\d+$/.test(val)) {
+      setTimeLimitError('Only numbers are allowed');
+      setTimeLimit(val);
+    } else {
+      setTimeLimitError('');
+      setTimeLimit(val);
+    }
+  };
+
+  const handlePassScoreChange = (e) => {
+    const val = e.target.value;
+    if (val === '') { setPassScore(''); setPassScoreError(''); return; }
+    if (!/^\d+$/.test(val)) {
+      setPassScoreError('Only numbers are allowed');
+      setPassScore(val);
+    } else {
+      setPassScoreError('');
+      setPassScore(val);
+    }
+  };
+
   const handleSave = async () => {
     if (!jobId) {
        alert("No Job ID found. Please create a job first.");
+       return;
+    }
+    if (timeLimitError || passScoreError) {
+       alert("Please fix validation errors before saving.");
        return;
     }
 
@@ -251,12 +310,13 @@ export default function AssessmentBuilder() {
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input 
-                    type="number" 
+                    type="text" 
                     value={timeLimit}
-                    onChange={(e) => setTimeLimit(Number(e.target.value) || 0)}
+                    onChange={handleTimeLimitChange}
                     className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none text-sm" 
                   />
                 </div>
+                {timeLimitError && <p className="text-red-500 text-xs mt-1">{timeLimitError}</p>}
               </div>
 
               <div>
@@ -264,12 +324,13 @@ export default function AssessmentBuilder() {
                 <div className="relative">
                   <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input 
-                    type="number" 
+                    type="text" 
                     value={passScore}
-                    onChange={(e) => setPassScore(Number(e.target.value) || 0)}
+                    onChange={handlePassScoreChange}
                     className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none text-sm" 
                   />
                 </div>
+                {passScoreError && <p className="text-red-500 text-xs mt-1">{passScoreError}</p>}
                 <p className="text-xs text-gray-500 mt-2">Candidates scoring below this will be auto-flagged in your pipeline.</p>
               </div>
 
