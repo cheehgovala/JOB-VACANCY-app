@@ -185,6 +185,11 @@ export default function JobSearch() {
               </div>
             </div>
 
+<<<<<<< HEAD
+=======
+
+            
+>>>>>>> c208720ee66fa77c9c7bfb3d3aaeedac7e0ae3aa
           </div>
         </div>
       </div>
