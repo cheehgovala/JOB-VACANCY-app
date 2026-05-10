@@ -64,11 +64,13 @@ export default function EmployerLayout() {
         <div className="absolute bottom-0 left-0 w-full p-4 border-t border-gray-800 bg-gray-900/90">
           <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Plan</p>
-            <p className="text-sm font-semibold text-white mb-1">Premium Employer</p>
-            <p className="text-xs text-gray-400">12 days remaining</p>
-            <button className="w-full mt-3 bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+            <p className="text-sm font-semibold text-white mb-1">{user?.subscriptionPlan || 'Free Employer'}</p>
+            <p className="text-xs text-gray-400">
+              {user?.subscriptionExpiry ? `${Math.max(0, Math.ceil((new Date(user.subscriptionExpiry) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining` : 'No active subscription'}
+            </p>
+            <Link to="/subscription" className="block text-center w-full mt-3 bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold py-2 rounded-lg transition-colors">
               Renew Subscription
-            </button>
+            </Link>
           </div>
         </div>
       </aside>

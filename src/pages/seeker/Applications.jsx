@@ -35,8 +35,9 @@ export default function Applications() {
           id: j._id || j.id,
           title: j.title,
           company: j.employerId?.employerProfile?.companyName || 'Unknown Company',
-          location: j.location,
-          salary: j.salary
+          title: j.title,
+          company: j.employerId?.employerProfile?.companyName || 'Unknown Company',
+          location: j.location
         }));
         setRecommendedJobs(formattedJobs);
       } catch (error) {
@@ -199,12 +200,9 @@ export default function Applications() {
                       <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors leading-tight mb-1 mt-2">{job.title}</h4>
                       <p className="text-sm font-medium text-gray-500 mb-4">{job.company}</p>
                       
-                      <div className="space-y-2 mb-6">
+                      <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="w-4 h-4 text-gray-400" /> {job.location}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <DollarSign className="w-4 h-4 text-gray-400" /> {job.salary}
                         </div>
                       </div>
                       

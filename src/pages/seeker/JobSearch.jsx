@@ -20,13 +20,12 @@ export default function JobSearch() {
 
   const [activeTab, setActiveTab] = useState('all');
   const [selectedJob, setSelectedJob] = useState(null);
-  
+
   const [filters, setFilters] = useState({
     location: [],
     type: [],
     experience: [],
-    industry: [],
-    salary: []
+    industry: []
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,13 +95,13 @@ export default function JobSearch() {
       } else {
         score += 30; // Base score if no specific skills required
       }
-      
+
       const userExpCount = user?.seekerProfile?.experience?.length || 0;
-      const expLevel = job.experience || 'Entry-Level';
-      if (expLevel.includes('Executive') && userExpCount > 4) score += 40;
-      else if (expLevel.includes('Senior') && userExpCount >= 3) score += 40;
-      else if (expLevel.includes('Mid') && userExpCount >= 1) score += 40;
-      else if (expLevel.includes('Entry') || expLevel === 'Entry-Level') score += 40;
+      const expLevel = job.experience || '0-1 Year';
+      if (expLevel.includes('5+') && userExpCount >= 5) score += 40;
+      else if (expLevel.includes('3-4') && userExpCount >= 3) score += 40;
+      else if (expLevel.includes('2') && userExpCount >= 2) score += 40;
+      else if (expLevel.includes('0-1') || expLevel === 'Entry Level') score += 40;
       else score += 20;
 
       return { ...job, match: Math.min(100, Math.round(score)) };
@@ -125,7 +124,6 @@ export default function JobSearch() {
       if (filters.type.length > 0 && !filters.type.some(f => f.toLowerCase() === job.type?.toLowerCase())) return false;
       if (filters.experience.length > 0 && !filters.experience.some(f => f.toLowerCase() === job.experience?.toLowerCase())) return false;
       if (filters.industry.length > 0 && !filters.industry.some(f => f.toLowerCase() === job.industry?.toLowerCase())) return false;
-      if (filters.salary.length > 0 && !filters.salary.some(f => f.toLowerCase() === job.salary?.toLowerCase())) return false;
 
       // Removed the 10-day old filter. We now rely on backend TTL and application deadline.
 
@@ -149,7 +147,7 @@ export default function JobSearch() {
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Filter className="w-5 h-5 text-primary-600" /> Filters
           </h2>
-          
+
           <div className="space-y-6 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Job Type</h3>
@@ -166,7 +164,7 @@ export default function JobSearch() {
             <div className="pt-4 border-t border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Experience Level</h3>
               <div className="space-y-2">
-                {['Entry Level', 'Mid Level', 'Senior', 'Executive'].map((level) => (
+                {['0-1 Year', '2 Years', '3-4 Years', '5+ Years'].map((level) => (
                   <label key={level} className="flex items-center gap-2 cursor-pointer group">
                     <input type="checkbox" checked={filters.experience.includes(level)} onChange={() => handleFilterChange('experience', level)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
                     <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{level}</span>
@@ -178,7 +176,7 @@ export default function JobSearch() {
             <div className="pt-4 border-t border-gray-100">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Industry</h3>
               <div className="space-y-2">
-                {['Technology', 'Design', 'Finance', 'Telecommunications'].map((ind) => (
+                {['Technology', 'Design', 'Finance', 'Telecommunications', 'Other'].map((ind) => (
                   <label key={ind} className="flex items-center gap-2 cursor-pointer group">
                     <input type="checkbox" checked={filters.industry.includes(ind)} onChange={() => handleFilterChange('industry', ind)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
                     <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{ind}</span>
@@ -187,18 +185,6 @@ export default function JobSearch() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Salary Range</h3>
-              <div className="space-y-2">
-                {['Competitive', 'MWK 1.2M - 1.8M', 'MWK 1.5M - 2.5M', 'MWK 2.5M - 3.5M', 'MWK 3.0M - 4.5M'].map((sal) => (
-                  <label key={sal} className="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" checked={filters.salary.includes(sal)} onChange={() => handleFilterChange('salary', sal)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-                    <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{sal}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            
           </div>
         </div>
       </div>
@@ -210,17 +196,17 @@ export default function JobSearch() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Job title, keywords, or company" 
+                placeholder="Job title, keywords, or company"
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none"
               />
             </div>
             <div className="flex-1 relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
-              <select 
+              <select
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none appearance-none cursor-pointer"
@@ -237,20 +223,20 @@ export default function JobSearch() {
 
         {/* Tabs */}
         <div className="flex gap-4 border-b border-gray-200 pb-px">
-          <button 
+          <button
             onClick={() => setActiveTab('all')}
             className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'all' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
             All Jobs
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('recommended')}
             className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'recommended' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
             Smart Matches
             <span className="ml-2 bg-primary-100 text-primary-700 py-0.5 px-2 rounded-full text-xs">New</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('saved')}
             className={`pb-3 text-sm font-semibold transition-all border-b-2 ${activeTab === 'saved' ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
           >
@@ -262,74 +248,73 @@ export default function JobSearch() {
         <div className="grid grid-cols-1 gap-4">
           {filteredJobs.length === 0 ? (
             <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center text-gray-500">
-               No jobs match your criteria. Try loosening your filters.
+              No jobs match your criteria. Try loosening your filters.
             </div>
           ) : (
             filteredJobs.map((job, index) => (
-            <motion.div 
-              key={job.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => setSelectedJob(job)}
-              className={`bg-white border text-left rounded-xl p-5 hover:shadow-md cursor-pointer transition-all flex flex-col gap-3 relative ${job.isPremium ? 'border-primary-200 bg-blue-50/10' : 'border-gray-200 hover:border-gray-300'}`}
-            >
-              {activeTab === 'recommended' && <div className="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-xl"></div>}
-              
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 hover:underline">{job.title}</h3>
-                  <p className="text-gray-800 text-sm mt-1 font-medium">{job.company || 'Unknown Company'}</p>
-                  <p className="text-gray-600 text-sm">{job.location}</p>
+              <motion.div
+                key={job.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => setSelectedJob(job)}
+                className={`bg-white border text-left rounded-xl p-5 hover:shadow-md cursor-pointer transition-all flex flex-col gap-3 relative ${job.isPremium ? 'border-primary-200 bg-blue-50/10' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                {activeTab === 'recommended' && <div className="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-xl"></div>}
+
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 hover:underline">{job.title}</h3>
+                    <p className="text-gray-800 text-sm mt-1 font-medium">{job.institution || job.company || 'Unknown Company'}</p>
+                    <p className="text-gray-600 text-sm">{job.location}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap gap-2 text-sm text-gray-700 mt-1">
-                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold">{job.salary}</span>
-                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold">{job.type}</span>
-              </div>
+                <div className="flex flex-wrap gap-2 text-sm text-gray-700 mt-1">
+                  <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold">{job.type}</span>
+                </div>
 
-              <div className="mt-2 text-sm text-gray-600 line-clamp-2">
-                {job.description || 'Click to view details for this role.'}
-              </div>
-              
-              <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                  <span>{job.posted}</span>
-                  {job.hasAssessment && (
-                    <>
-                      <span>•</span>
-                      <span className="text-primary-700 font-bold flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5" /> Assessment Required
-                      </span>
-                    </>
-                  )}
-                  {activeTab === 'recommended' && job.match && (
-                     <>
+                <div className="mt-2 text-sm text-gray-600 line-clamp-2">
+                  {job.rolePurpose || job.description || 'Click to view details for this role.'}
+                </div>
+
+                <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                    <span>{job.posted}</span>
+                    {job.hasAssessment && (
+                      <>
+                        <span>•</span>
+                        <span className="text-primary-700 font-bold flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" /> Assessment Required
+                        </span>
+                      </>
+                    )}
+                    {activeTab === 'recommended' && job.match && (
+                      <>
                         <span>•</span>
                         <span className="text-green-700 font-bold">
                           {job.match}% Match
                         </span>
-                     </>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )))}
+              </motion.div>
+            )))}
         </div>
       </div>
 
       {/* Job Details Modal */}
       <AnimatePresence>
         {selectedJob && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
             onClick={() => setSelectedJob(null)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -337,34 +322,64 @@ export default function JobSearch() {
               className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               <div className={`p-6 border-b ${selectedJob.isPremium ? 'bg-yellow-50 border-yellow-100' : 'bg-gray-50 border-gray-100'} flex justify-between items-start relative`}>
-                {selectedJob.isPremium && <div className="absolute top-0 right-6 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-b-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900"/> FEATURED</div>}
+                {selectedJob.isPremium && <div className="absolute top-0 right-6 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-b-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900" /> FEATURED</div>}
                 <div className="flex gap-4 items-center mt-4 sm:mt-0">
                   <div className={`w-16 h-16 rounded-xl border flex items-center justify-center bg-white shadow-sm flex-shrink-0 ${selectedJob.isPremium ? 'border-yellow-200' : 'border-gray-100'}`}>
                     {selectedJob.isPremium ? <Building2 className="w-8 h-8 text-yellow-600" /> : <Briefcase className="w-8 h-8 text-primary-600" />}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 leading-tight pr-8">{selectedJob.title}</h2>
-                    <p className="text-primary-600 font-medium">{selectedJob.company}</p>
+                    <p className="text-primary-600 font-medium">{selectedJob.institution || selectedJob.company}</p>
                   </div>
                 </div>
                 <button onClick={() => setSelectedJob(null)} className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors">
                   <X className="w-6 h-6 text-gray-500" />
                 </button>
               </div>
-              
+
               <div className="p-6 overflow-y-auto hidden-scrollbar flex-1">
                 <div className="flex flex-wrap gap-3 mb-6">
-                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><MapPin className="w-4 h-4"/> {selectedJob.location}</span>
-                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><Briefcase className="w-4 h-4"/> {selectedJob.type}</span>
-                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.salary}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><MapPin className="w-4 h-4" /> {selectedJob.location}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><Briefcase className="w-4 h-4" /> {selectedJob.type}</span>
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.experience}</span>
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.industry}</span>
                 </div>
 
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">Job Description</h3>
-                  <p className="text-gray-600 leading-relaxed">{selectedJob.description}</p>
-                </div>
+                {selectedJob.rolePurpose && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Role Purpose</h3>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.rolePurpose}</p>
+                  </div>
+                )}
+
+                {selectedJob.keyResponsibilities && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Key Responsibilities</h3>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.keyResponsibilities}</p>
+                  </div>
+                )}
+
+                {selectedJob.qualifications && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Required Qualifications and Experience</h3>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.qualifications}</p>
+                  </div>
+                )}
+
+                {selectedJob.termsAndConditions && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Terms and Conditions of Service</h3>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.termsAndConditions}</p>
+                  </div>
+                )}
+
+                {/* Fallback for old jobs */}
+                {!selectedJob.rolePurpose && selectedJob.description && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Job Description</h3>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
+                  </div>
+                )}
 
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3">Required Skills</h3>
@@ -379,14 +394,14 @@ export default function JobSearch() {
               </div>
 
               <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-4">
-                <button 
+                <button
                   onClick={handleSaveBtn}
                   disabled={savedJobIds.includes(selectedJob.id)}
                   className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-sm transition-colors border ${savedJobIds.includes(selectedJob.id) ? 'bg-green-50 text-green-700 border-green-200 cursor-not-allowed' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'}`}
                 >
                   {savedJobIds.includes(selectedJob.id) ? 'Saved' : 'Save for Later'}
                 </button>
-                <button 
+                <button
                   onClick={handleApplyBtn}
                   disabled={appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline))}
                   className={`flex-1 font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 ${appliedJobIds.includes(selectedJob.id) || (selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline)) ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}

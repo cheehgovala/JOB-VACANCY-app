@@ -10,7 +10,6 @@ const freeJobs = [
     company: "Tech Solutions Ltd",
     location: "Lilongwe",
     type: "Full-time",
-    salary: "MWK 800,000 - 1,200,000",
     posted: "2 days ago",
     description: "We are looking for an experienced Frontend Developer to build modern web applications using React and Tailwind CSS. Must have 5+ years of experience."
   },
@@ -20,7 +19,6 @@ const freeJobs = [
     company: "Global Innovations",
     location: "Blantyre",
     type: "Contract",
-    salary: "MWK 600,000 - 900,000",
     posted: "1 week ago",
     description: "Seeking a creative Marketing Manager to lead our digital campaigns and improve brand visibility across platforms. Proven track record required."
   },
@@ -30,7 +28,6 @@ const freeJobs = [
     company: "Finance Corp",
     location: "Mzuzu (Remote)",
     type: "Full-time",
-    salary: "MWK 700,000 - 1,000,000",
     posted: "3 days ago",
     description: "Analyze financial data to help drive strategic business decisions. Proficiency in SQL, Python, and modern BI tools required."
   }
@@ -166,10 +163,6 @@ export default function Home() {
                     <div className="flex items-center text-base text-gray-500">
                       <MapPin className="w-5 h-5 mr-3 text-gray-400" />
                       {freeJobs[currentIndex].location}
-                    </div>
-                    <div className="flex items-center text-base text-gray-500">
-                      <DollarSign className="w-5 h-5 mr-3 text-gray-400" />
-                      {freeJobs[currentIndex].salary}
                     </div>
                     <div className="flex items-center text-base text-gray-500">
                       <Clock className="w-5 h-5 mr-3 text-gray-400" />

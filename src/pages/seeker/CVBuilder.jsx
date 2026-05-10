@@ -160,7 +160,7 @@ export default function CVBuilder() {
   };
 
   const handleCopyLink = () => {
-    const mockLink = `https://talentmw.com/cv/u-${Math.floor(Math.random() * 1000000)}`;
+    const mockLink = `${window.location.origin}/cv/u-${Math.floor(Math.random() * 1000000)}`;
     navigator.clipboard.writeText(mockLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
@@ -528,7 +528,7 @@ export default function CVBuilder() {
                         setFormData({ ...formData, experience: newExp });
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                      placeholder="Jan 2021 - Present" 
+                      placeholder="e.g. 2020 - Present" 
                     />
                   </div>
                   <div className="col-span-1 md:col-span-2">
@@ -562,6 +562,7 @@ export default function CVBuilder() {
                 <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Degree / Qualification</label>
                   <input 
+                    list="degrees-list"
                     type="text" 
                     value={edu.degree}
                     onChange={(e) => {
@@ -572,6 +573,21 @@ export default function CVBuilder() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
                     placeholder="e.g. BSc Computer Science" 
                   />
+                  <datalist id="degrees-list">
+                    <option value="MSCE (Malawi School Certificate of Education)" />
+                    <option value="Diploma in Business Management" />
+                    <option value="Diploma in Information Technology" />
+                    <option value="Diploma in Accounting" />
+                    <option value="BSc Computer Science" />
+                    <option value="BSc Management Information Systems" />
+                    <option value="BSc Economics" />
+                    <option value="Bachelor of Arts" />
+                    <option value="BBA (Bachelor of Business Administration)" />
+                    <option value="Bachelor of Laws (LLB)" />
+                    <option value="MSc Computer Science" />
+                    <option value="MBA (Master of Business Administration)" />
+                    <option value="PhD" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
@@ -621,6 +637,7 @@ export default function CVBuilder() {
                 <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Certification Name</label>
                   <input 
+                    list="certificates-list"
                     type="text" 
                     value={cert.name}
                     onChange={(e) => {
@@ -631,6 +648,19 @@ export default function CVBuilder() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
                     placeholder="e.g. AWS Certified Solutions Architect" 
                   />
+                  <datalist id="certificates-list">
+                    <option value="AWS Certified Solutions Architect" />
+                    <option value="Cisco CCNA" />
+                    <option value="CompTIA A+" />
+                    <option value="CompTIA Security+" />
+                    <option value="PMP (Project Management Professional)" />
+                    <option value="CPA (Certified Public Accountant)" />
+                    <option value="ACCA" />
+                    <option value="Digital Marketing Certification" />
+                    <option value="Google IT Support" />
+                    <option value="Microsoft Certified: Azure Fundamentals" />
+                    <option value="Certified Ethical Hacker (CEH)" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Organization</label>

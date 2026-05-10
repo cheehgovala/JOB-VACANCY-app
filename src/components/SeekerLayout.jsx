@@ -161,6 +161,21 @@ export default function SeekerLayout() {
             </>
           )}
         </nav>
+        
+        {/* Subscription Info Box */}
+        {cvCompleted && (
+          <div className="absolute bottom-6 left-4 right-4">
+            <div className="bg-primary-50 p-4 rounded-xl border border-primary-100">
+              <h4 className="text-sm font-bold text-gray-900 mb-1">Plan: {user?.subscriptionPlan || 'Free Seeker'}</h4>
+              <p className="text-xs text-primary-600 font-semibold mb-3">
+                {user?.subscriptionExpiry ? `${Math.max(0, Math.ceil((new Date(user.subscriptionExpiry) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining` : 'No active subscription'}
+              </p>
+              <Link to="/subscription" className="block w-full py-2 bg-primary-600 hover:bg-primary-700 text-white text-center rounded-lg text-xs font-bold transition-colors">
+                Renew Subscription
+              </Link>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Main Content */}

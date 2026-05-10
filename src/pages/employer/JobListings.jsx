@@ -81,9 +81,6 @@ export default function JobListings() {
                   <MapPin className="w-4 h-4 text-gray-400" /> {job.location}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <DollarSign className="w-4 h-4 text-gray-400" /> {job.salary}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Calendar className="w-4 h-4 text-gray-400" /> Posted on {new Date(job.createdAt).toLocaleDateString()}
                 </div>
               </div>
