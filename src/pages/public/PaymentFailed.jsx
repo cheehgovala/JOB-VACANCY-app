@@ -1,9 +1,17 @@
 import { motion } from 'framer-motion';
 import { XCircle, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export default function PaymentFailed() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate('/subscription');
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   const handleRetry = () => {
     navigate('/subscription');
@@ -32,8 +40,12 @@ export default function PaymentFailed() {
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
             Payment Failed
           </h2>
-          <p className="text-gray-500 mb-8">
+          <p className="text-gray-500 mb-6">
             Unfortunately, we could not process your payment at this time. Please try again or use a different payment method.
+          </p>
+
+          <p className="text-sm text-gray-500 font-medium mb-8 animate-pulse">
+            Redirecting you automatically...
           </p>
 
           <button

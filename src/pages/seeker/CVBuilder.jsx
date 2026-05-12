@@ -665,6 +665,7 @@ export default function CVBuilder() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Organization</label>
                   <input 
+                    list="organizations-list"
                     type="text" 
                     value={cert.organization}
                     onChange={(e) => {
@@ -675,6 +676,21 @@ export default function CVBuilder() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
                     placeholder="e.g. Amazon Web Services" 
                   />
+                  <datalist id="organizations-list">
+                    <option value="Amazon Web Services (AWS)" />
+                    <option value="Cisco" />
+                    <option value="CompTIA" />
+                    <option value="Microsoft" />
+                    <option value="Google" />
+                    <option value="Project Management Institute (PMI)" />
+                    <option value="EC-Council" />
+                    <option value="ACCA" />
+                    <option value="CPA" />
+                    <option value="IBM" />
+                    <option value="Oracle" />
+                    <option value="HubSpot" />
+                    <option value="Meta (Facebook)" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>

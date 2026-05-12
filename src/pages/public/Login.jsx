@@ -87,7 +87,7 @@ export default function Login() {
         <Link to="/" className="flex justify-center items-center gap-2 mb-6 cursor-pointer">
           <Briefcase className="h-10 w-10 text-primary-600" />
           <span className="font-bold text-3xl tracking-tight text-gray-900">
-            Talent<span className="text-primary-600">Mw</span>
+            Smart Hire <span className="text-primary-600">Malawi</span>
           </span>
         </Link>
         <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">

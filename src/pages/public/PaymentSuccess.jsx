@@ -21,7 +21,17 @@ export default function PaymentSuccess() {
     if (user && !user.hasActiveSubscription) {
       updateSubscription(planId, PLAN_DAYS[planId]);
     }
-  }, [user, planId, updateSubscription]);
+
+    const timer = setTimeout(() => {
+      if (user?.role === 'employer') {
+        navigate('/employer/dashboard');
+      } else {
+        navigate('/seeker/cv-builder');
+      }
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [user, planId, updateSubscription, navigate]);
 
   const handleReturn = () => {
     if (user?.role === 'employer') {
@@ -71,6 +81,10 @@ export default function PaymentSuccess() {
               </p>
             </div>
           </div>
+
+          <p className="text-sm text-gray-500 font-medium mb-4 animate-pulse">
+            Redirecting to your dashboard automatically...
+          </p>
 
           <button
             onClick={handleReturn}
