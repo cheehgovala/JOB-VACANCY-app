@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function EmployerDashboard() {
   const { user } = useAuth();
@@ -119,33 +118,7 @@ export default function EmployerDashboard() {
                 const COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#8b5cf6', '#ec4899', '#14b8a6'];
                 return (
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={allSortedMatches.map(app => ({
-                              name: app.applicantId?.name || app.applicantName || 'Candidate',
-                              value: app.matchScore || 0
-                            }))}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={70}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {allSortedMatches.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value) => [`${value}% Match`, 'Score']}
-                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="w-full mt-2 space-y-2">
+                    <div className="w-full space-y-2">
                       {topMatches.map((app, i) => {
                         const name = app.applicantId?.name || app.applicantName || 'Candidate';
                         const role = app.jobId?.title || app.jobTitle || 'Applicant';

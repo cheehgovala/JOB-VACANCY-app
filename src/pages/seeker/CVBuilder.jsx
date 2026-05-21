@@ -27,7 +27,7 @@ export default function CVBuilder() {
 
   const [formData, setFormData] = useState({
     personal: { fullName: '', email: '', phone: '', location: '', bio: '', nationalIdUrl: '' },
-    experience: [{ title: '', company: '', duration: '', description: '' }],
+    experience: [{ title: '', company: '', startDate: '', endDate: '', description: '' }],
     education: [{ degree: '', institution: '', year: '' }],
     certifications: [{ name: '', organization: '', year: '', attachmentUrl: '' }],
     references: [{ name: '', role: '', contact: '' }],
@@ -54,9 +54,10 @@ export default function CVBuilder() {
         experience: sp.experience?.length ? sp.experience.map(e => ({
           title: e.title || '',
           company: e.company || '',
-          duration: e.duration || (e.startDate ? `${new Date(e.startDate).getFullYear()}` : ''),
+          startDate: e.startDate ? new Date(e.startDate).toISOString().split('T')[0] : '',
+          endDate: e.endDate ? new Date(e.endDate).toISOString().split('T')[0] : '',
           description: e.description || ''
-        })) : [{ title: '', company: '', duration: '', description: '' }],
+        })) : [{ title: '', company: '', startDate: '', endDate: '', description: '' }],
         education: sp.education?.length ? sp.education.map(e => ({
           degree: e.degree || '',
           institution: e.institution || '',
@@ -166,6 +167,19 @@ export default function CVBuilder() {
     setTimeout(() => setCopiedLink(false), 3000);
   };
 
+  const formatDuration = (start, end) => {
+    if (!start) return '';
+    const formatDate = (dateStr) => {
+      if (!dateStr) return 'Present';
+      const d = new Date(dateStr);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = d.toLocaleString('default', { month: 'short' }).toLowerCase();
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    };
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  };
+
   const generatePDFDoc = () => {
     const doc = new jsPDF();
     let currentY = 30;
@@ -208,7 +222,8 @@ export default function CVBuilder() {
         doc.setFont(undefined, 'normal');
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`(${exp.duration})`, 150, currentY);
+        const durationStr = (exp.startDate || exp.endDate) ? formatDuration(exp.startDate, exp.endDate) : '';
+        doc.text(`(${durationStr})`, 150, currentY);
         doc.setTextColor(0);
         doc.setFontSize(12);
         currentY += 6;
@@ -481,7 +496,7 @@ export default function CVBuilder() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900">Work Experience</h2>
-              <button onClick={() => setFormData({...formData, experience: [...formData.experience, {title: '', company: '', duration: '', description: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
+              <button onClick={() => setFormData({...formData, experience: [...formData.experience, {title: '', company: '', startDate: '', endDate: '', description: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
             </div>
             {formData.experience.map((exp, i) => (
               <div key={i} className="space-y-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
@@ -516,20 +531,33 @@ export default function CVBuilder() {
                       placeholder="e.g. Airtel Malawi" 
                     />
                   </div>
-                  <div className="col-span-1 md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-                    <input 
-                      list="duration-list"
-                      type="text" 
-                      value={exp.duration}
-                      onChange={(e) => {
-                        const newExp = [...formData.experience];
-                        newExp[i].duration = e.target.value;
-                        setFormData({ ...formData, experience: newExp });
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                      placeholder="e.g. 2020 - Present" 
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <input 
+                        type="date" 
+                        value={exp.startDate || ''}
+                        onChange={(e) => {
+                          const newExp = [...formData.experience];
+                          newExp[i].startDate = e.target.value;
+                          setFormData({ ...formData, experience: newExp });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">End Date (Leave blank if current)</label>
+                      <input 
+                        type="date" 
+                        value={exp.endDate || ''}
+                        onChange={(e) => {
+                          const newExp = [...formData.experience];
+                          newExp[i].endDate = e.target.value;
+                          setFormData({ ...formData, experience: newExp });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                      />
+                    </div>
                   </div>
                   <div className="col-span-1 md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>

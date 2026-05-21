@@ -15,6 +15,7 @@ export default function AssessmentBuilder() {
   const [passScoreError, setPassScoreError] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [previousExams, setPreviousExams] = useState([]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [searchParams] = useSearchParams();
@@ -22,6 +23,12 @@ export default function AssessmentBuilder() {
   const jobId = searchParams.get('jobId');
 
   useEffect(() => {
+    api.get('/assessments/exams/employer')
+      .then(res => {
+        if (res.data) setPreviousExams(res.data);
+      })
+      .catch(err => console.error("Failed to fetch previous exams", err));
+
     if (jobId) {
       api.get(`/assessments/exams/${jobId}`)
         .then(res => {
@@ -145,6 +152,37 @@ export default function AssessmentBuilder() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Online Assessment Builder</h1>
           <p className="text-gray-500 mt-1">Create engaging pre-employment exams to evaluate skills automatically.</p>
+          {previousExams.length > 0 && (
+            <div className="mt-4">
+              <select 
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full max-w-sm p-2.5"
+                onChange={(e) => {
+                  const selected = previousExams.find(ex => ex._id === e.target.value);
+                  if (selected) {
+                    setExamName(selected.title);
+                    setTimeLimit(selected.timeLimitMinutes);
+                    setPassScore(selected.passThreshold);
+                    if (selected.questions && selected.questions.length > 0) {
+                      const formattedQ = selected.questions.map((q, i) => ({
+                        id: Date.now() + i,
+                        type: q.type,
+                        text: q.text,
+                        options: q.type === 'text' ? ['', '', '', ''] : (q.options?.length ? q.options : ['', '', '', '']),
+                        correct: q.type !== 'text' ? q.correctOptionIndex : 0,
+                        correctAnswer: q.type === 'text' ? (q.options && q.options[0] ? q.options[0] : '') : ''
+                      }));
+                      setQuestions(formattedQ);
+                    }
+                  }
+                }}
+              >
+                <option value="">Load from Previous Assessment...</option>
+                {previousExams.map(ex => (
+                  <option key={ex._id} value={ex._id}>{ex.title} {ex.jobId?.title ? `(from ${ex.jobId.title})` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button 
