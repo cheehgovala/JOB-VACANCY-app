@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { MALAWI_DISTRICTS } from '../../utils/constants.js';
+import { MALAWI_DISTRICTS, JOB_TYPES } from '../../utils/constants.js';
 
 export default function JobSearch() {
   const { user, saveJob, applyToJob } = useAuth();
@@ -40,6 +40,7 @@ export default function JobSearch() {
           ...j,
           id: j._id || j.id,
           type: j.jobType || j.type || 'Full-time',
+          duration: j.duration || j.contractDuration || '',
           experience: j.experienceLevel || j.experience || 'Entry Level',
           industry: j.category || j.industry || 'Technology',
           skills: j.skills || j.requirements || [],
@@ -87,24 +88,58 @@ export default function JobSearch() {
 
   const allJobs = useMemo(() => {
     return apiJobs.map(job => {
-      let score = 0;
+      let cvCompletenessScore = user?.seekerProfile?.completeness || 0;
+      if (!cvCompletenessScore && user) {
+          let cScore = 0;
+          if (user.name) cScore += 1;
+          if (seekerSkills.length > 0) cScore += 1;
+          if (user?.seekerProfile?.experience?.length > 0) cScore += 1;
+          if (user?.seekerProfile?.education?.length > 0) cScore += 1;
+          cScore += 1; // Base point
+          cvCompletenessScore = (cScore / 5) * 100;
+      }
+
+      let titleMatchScore = 0;
+      const profileTitle = user?.seekerProfile?.personal?.title || (user?.seekerProfile?.experience?.length > 0 ? user.seekerProfile.experience[0].title : '');
+      if (job.title && profileTitle) {
+         if (job.title.toLowerCase().includes(profileTitle.toLowerCase()) || profileTitle.toLowerCase().includes(job.title.toLowerCase())) {
+             titleMatchScore = 100;
+         } else {
+             titleMatchScore = 50;
+         }
+      }
+
+      let skillsScore = 0;
       const jobSkills = job.skills || [];
       if (jobSkills.length > 0 && seekerSkills.length > 0) {
         const matched = jobSkills.filter(req => seekerSkills.some(sk => sk.includes(req.toLowerCase()) || req.toLowerCase().includes(sk)));
-        score += (matched.length / jobSkills.length) * 60;
+        skillsScore = (matched.length / jobSkills.length) * 100;
       } else {
-        score += 30; // Base score if no specific skills required
+        skillsScore = 100; 
       }
 
-      const userExpCount = user?.seekerProfile?.experience?.length || 0;
+      let expScore = 0;
+      let totalYearsExp = 0;
+      (user?.seekerProfile?.experience || []).forEach(exp => {
+          if (exp.startDate) {
+              const start = new Date(exp.startDate);
+              const end = exp.endDate ? new Date(exp.endDate) : new Date();
+              const diffMs = end - start;
+              if (diffMs > 0) {
+                  totalYearsExp += diffMs / (1000 * 60 * 60 * 24 * 365.25);
+              }
+          }
+      });
       const expLevel = job.experience || '0-1 Year';
-      if (expLevel.includes('5+') && userExpCount >= 5) score += 40;
-      else if (expLevel.includes('3-4') && userExpCount >= 3) score += 40;
-      else if (expLevel.includes('2') && userExpCount >= 2) score += 40;
-      else if (expLevel.includes('0-1') || expLevel === 'Entry Level') score += 40;
-      else score += 20;
+      if (expLevel === '5+ Years' && totalYearsExp >= 5) expScore = 100;
+      else if (expLevel === '3-4 Years' && totalYearsExp >= 3) expScore = 100;
+      else if (expLevel === '2 Years' && totalYearsExp >= 2) expScore = 100;
+      else if (expLevel === '0-1 Year') expScore = 100;
+      else expScore = 50;
 
-      return { ...job, match: Math.min(100, Math.round(score)) };
+      const finalScore = (skillsScore * (0.35/0.75)) + (expScore * (0.20/0.75)) + (cvCompletenessScore * (0.10/0.75)) + (titleMatchScore * (0.10/0.75));
+
+      return { ...job, match: Math.min(100, Math.round(finalScore)) };
     });
   }, [apiJobs, seekerSkills, user]);
 
@@ -152,7 +187,7 @@ export default function JobSearch() {
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Job Type</h3>
               <div className="space-y-2">
-                {['Full-time', 'Part-time', 'Contract', 'Internship'].map((type) => (
+                {JOB_TYPES.map((type) => (
                   <label key={type} className="flex items-center gap-2 cursor-pointer group">
                     <input type="checkbox" checked={filters.type.includes(type)} onChange={() => handleFilterChange('type', type)} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
                     <span className="text-sm text-gray-600 group-hover:text-primary-600 transition-colors">{type}</span>
@@ -342,6 +377,9 @@ export default function JobSearch() {
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><MapPin className="w-4 h-4" /> {selectedJob.location}</span>
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><Briefcase className="w-4 h-4" /> {selectedJob.type}</span>
+                  {selectedJob.duration && (
+                    <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">⏱ {selectedJob.duration}</span>
+                  )}
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.experience}</span>
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.industry}</span>
                 </div>

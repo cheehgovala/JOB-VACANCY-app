@@ -81,6 +81,15 @@ export default function JobListings() {
                   <MapPin className="w-4 h-4 text-gray-400" /> {job.location}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Briefcase className="w-4 h-4 text-gray-400" />
+                  <span className="inline-block bg-primary-50 text-primary-700 text-xs font-bold px-2 py-0.5 rounded-full border border-primary-100">
+                    {job.jobType || 'Full-time'}
+                  </span>
+                  {job.duration && (
+                    <span className="text-xs text-gray-400">· {job.duration}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Calendar className="w-4 h-4 text-gray-400" /> Posted on {new Date(job.createdAt).toLocaleDateString()}
                 </div>
               </div>
