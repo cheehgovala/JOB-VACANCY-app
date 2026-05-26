@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Briefcase, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
+import { CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -304,6 +304,9 @@ export default function JobSearch() {
                     <p className="text-gray-800 text-sm mt-1 font-medium">{job.institution || job.company || 'Unknown Company'}</p>
                     <p className="text-gray-600 text-sm">{job.location}</p>
                   </div>
+                  {job.isUpdated && (
+                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100 flex-shrink-0">Updated</span>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2 text-sm text-gray-700 mt-1">
@@ -373,7 +376,7 @@ export default function JobSearch() {
               <div className="p-6 overflow-y-auto hidden-scrollbar flex-1">
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><MapPin className="w-4 h-4" /> {selectedJob.location}</span>
-                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium"><Briefcase className="w-4 h-4" /> {selectedJob.type}</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.type}</span>
                   {selectedJob.duration && (
                     <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">⏱ {selectedJob.duration}</span>
                   )}

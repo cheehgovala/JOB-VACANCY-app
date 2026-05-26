@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Briefcase, MapPin, DollarSign, Calendar, Plus, Edit, Trash2 } from 'lucide-react';
+import { Briefcase, MapPin, Calendar, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
@@ -67,11 +67,16 @@ export default function JobListings() {
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1"></div>
-                {new Date() > new Date(job.applicationDeadline) ? (
-                  <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Expired</span>
-                ) : (
-                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Active</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {job.isUpdated && (
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">Updated</span>
+                  )}
+                  {new Date() > new Date(job.applicationDeadline) ? (
+                    <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full">Expired</span>
+                  ) : (
+                    <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full">Active</span>
+                  )}
+                </div>
               </div>
               
               <h2 className="text-lg font-bold text-gray-900 mb-2">{job.title}</h2>
@@ -81,7 +86,6 @@ export default function JobListings() {
                   <MapPin className="w-4 h-4 text-gray-400" /> {job.location}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Briefcase className="w-4 h-4 text-gray-400" />
                   <span className="inline-block bg-primary-50 text-primary-700 text-xs font-bold px-2 py-0.5 rounded-full border border-primary-100">
                     {job.jobType || 'Full-time'}
                   </span>
