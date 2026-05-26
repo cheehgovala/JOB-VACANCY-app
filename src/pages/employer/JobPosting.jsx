@@ -415,17 +415,7 @@ export default function JobPosting() {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Required Skill Tags (Critical for Match Algorithm)</label>
                   <form onSubmit={handleAddSkill} className="flex gap-2">
-                    <input list="skills-list" type="text" value={currentSkill} onChange={e => setCurrentSkill(e.target.value)} className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none" placeholder="Search from the standard skill library (e.g. ReactJS, B2B Sales)" />
-                    <datalist id="skills-list">
-                      <option value="ReactJS" /><option value="Node.js" /><option value="Python" />
-                      <option value="Data Analysis" /><option value="Project Management" />
-                      <option value="B2B Sales" /><option value="Digital Marketing" />
-                      <option value="Customer Service" /><option value="Accounting" />
-                      <option value="Human Resources" /><option value="Graphic Design" />
-                      <option value="Communication" /><option value="Leadership" />
-                      <option value="Problem Solving" /><option value="Public Health" />
-                      <option value="Research" /><option value="Monitoring & Evaluation" />
-                    </datalist>
+                    <input type="text" value={currentSkill} onChange={e => setCurrentSkill(e.target.value)} className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none" placeholder="Type a skill and press Add (e.g. ReactJS, B2B Sales)" />
                     <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl transition-colors font-bold"><Plus className="w-5 h-5" /></button>
                   </form>
                   <div className="flex flex-wrap gap-2 mt-3 p-4 bg-white rounded-xl border border-blue-100 empty:hidden">
@@ -483,7 +473,7 @@ export default function JobPosting() {
                 <p className="text-primary-600 font-semibold mb-4">{formData.institution || 'Unknown Institution'}</p>
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
                   <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {formData.location || 'Remote'}</span>
-                  <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> {formData.jobType}</span>
+                  <span className="flex items-center gap-1.5">{formData.jobType}</span>
                   {requiresDuration && formData.duration && (
                     <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {formData.duration}</span>
                   )}

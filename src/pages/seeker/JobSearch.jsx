@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Briefcase, Building2, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
+import { Briefcase, CheckCircle, ChevronRight, Filter, MapPin, Search, Star, X } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -360,9 +360,6 @@ export default function JobSearch() {
               <div className={`p-6 border-b ${selectedJob.isPremium ? 'bg-yellow-50 border-yellow-100' : 'bg-gray-50 border-gray-100'} flex justify-between items-start relative`}>
                 {selectedJob.isPremium && <div className="absolute top-0 right-6 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-b-lg flex items-center gap-1"><Star className="w-3 h-3 fill-yellow-900" /> FEATURED</div>}
                 <div className="flex gap-4 items-center mt-4 sm:mt-0">
-                  <div className={`w-16 h-16 rounded-xl border flex items-center justify-center bg-white shadow-sm flex-shrink-0 ${selectedJob.isPremium ? 'border-yellow-200' : 'border-gray-100'}`}>
-                    {selectedJob.isPremium ? <Building2 className="w-8 h-8 text-yellow-600" /> : <Briefcase className="w-8 h-8 text-primary-600" />}
-                  </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 leading-tight pr-8">{selectedJob.title}</h2>
                     <p className="text-primary-600 font-medium">{selectedJob.institution || selectedJob.company}</p>
