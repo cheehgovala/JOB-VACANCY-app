@@ -95,9 +95,10 @@ export default function Pipeline() {
         if (experienceLevels.length === 0) return true;
         const yrs = parseInt(c.experience);
         return experienceLevels.some(level => {
-          if (level.includes('Entry') && yrs <= 2) return true;
-          if (level.includes('Mid') && yrs >= 3 && yrs <= 5) return true;
-          if (level.includes('Senior') && yrs > 5) return true;
+          if (level === '1 Year' && yrs <= 1) return true;
+          if (level === '2-3 Years' && yrs >= 2 && yrs <= 3) return true;
+          if (level === '4-5 Years' && yrs >= 4 && yrs <= 5) return true;
+          if (level === '5+ Years' && yrs > 5) return true;
           return false;
         });
       })
@@ -212,9 +213,9 @@ export default function Pipeline() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Experience Level</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Experience</label>
               <div className="space-y-2">
-                {['Entry Level (0-2 Yrs)', 'Mid Level (3-5 Yrs)', 'Senior (5+ Yrs)'].map(exp => (
+                {['1 Year', '2-3 Years', '4-5 Years', '5+ Years'].map(exp => (
                   <label key={exp} className="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="checkbox" 
