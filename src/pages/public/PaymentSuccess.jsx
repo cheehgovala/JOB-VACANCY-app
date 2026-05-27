@@ -7,7 +7,6 @@ import api from '../../api/axios.js';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
-  const planId = searchParams.get('plan') || 'seeker_basic';
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [verified, setVerified] = useState(false);
