@@ -284,15 +284,22 @@ export default function JobPosting() {
               {/* Job Type */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Job Type <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.jobType}
-                  onChange={e => setFormData({ ...formData, jobType: e.target.value, duration: '' })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
-                >
-                  {JOB_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={formData.jobType}
+                    onChange={e => setFormData({ ...formData, jobType: e.target.value, duration: '' })}
+                    className="w-full px-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
+                  >
+                    {JOB_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  {formData.jobType && formData.jobType !== 'Full-time' && (
+                    <button type="button" onClick={() => setFormData({ ...formData, jobType: 'Full-time', duration: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
                 {!requiresDuration && (
                   <p className="text-xs text-gray-400 mt-1">Duration is not required for Full-time positions.</p>
                 )}
@@ -415,30 +422,44 @@ export default function JobPosting() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Industry</label>
-                    <select value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
-                      <option value="" disabled>Select industry</option>
-                      <option>Technology</option>
-                      <option>Design</option>
-                      <option>Finance</option>
-                      <option>Telecommunications</option>
-                      <option>Health</option>
-                      <option>Education</option>
-                      <option>Agriculture</option>
-                      <option>NGO / Development</option>
-                      <option>Government</option>
-                      <option>Other</option>
-                    </select>
+                    <div className="relative">
+                      <select value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none">
+                        <option value="" disabled>Select industry</option>
+                        <option>Technology</option>
+                        <option>Design</option>
+                        <option>Finance</option>
+                        <option>Telecommunications</option>
+                        <option>Health</option>
+                        <option>Education</option>
+                        <option>Agriculture</option>
+                        <option>NGO / Development</option>
+                        <option>Government</option>
+                        <option>Other</option>
+                      </select>
+                      {formData.department && (
+                        <button type="button" onClick={() => setFormData({ ...formData, department: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Minimum Years of Experience</label>
-                    <select value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
-                      <option value="" disabled>Select experience level</option>
-                      <option>0-1 Year</option>
-                      <option>2 Years</option>
-                      <option>3-4 Years</option>
-                      <option>5+ Years</option>
-                    </select>
+                    <div className="relative">
+                      <select value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })} className="w-full px-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none">
+                        <option value="" disabled>Select experience level</option>
+                        <option>0-1 Year</option>
+                        <option>2 Years</option>
+                        <option>3-4 Years</option>
+                        <option>5+ Years</option>
+                      </select>
+                      {formData.experience && (
+                        <button type="button" onClick={() => setFormData({ ...formData, experience: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
