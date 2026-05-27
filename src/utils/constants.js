@@ -9,7 +9,6 @@ export const MALAWI_DISTRICTS = [
 export const JOB_TYPES = [
   'Full-time',
   'Part-time',
-  'Short-term',
   'Contract',
   'Internship',
   'Consultant',

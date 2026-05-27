@@ -245,7 +245,7 @@ export default function JobSearch() {
               <select
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none appearance-none cursor-pointer"
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 rounded-xl transition-all outline-none appearance-none cursor-pointer"
               >
                 <option value="">All Districts</option>
                 <option value="Remote">Remote</option>
@@ -253,6 +253,11 @@ export default function JobSearch() {
                   <option key={district} value={district}>{district}</option>
                 ))}
               </select>
+              {searchLocation && (
+                <button type="button" onClick={() => setSearchLocation('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>

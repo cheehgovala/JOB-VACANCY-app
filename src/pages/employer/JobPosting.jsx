@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, ListChecks, Clock, X, Building2, Mail } from 'lucide-react';
+import { MapPin, Calendar, ListChecks, Clock, X, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MALAWI_DISTRICTS, JOB_TYPES, JOB_DURATIONS, MALAWI_ORGANIZATIONS } from '../../utils/constants.js';
+import { MALAWI_DISTRICTS, JOB_TYPES, JOB_DURATIONS } from '../../utils/constants.js';
 import api from '../../api/axios';
 
 // Job types that do NOT require a duration field
 const PERMANENT_TYPES = ['Full-time'];
+
+// Job categories with their specific titles
+const JOB_CATEGORIES = {
+  'Technology & IT': ['Software Engineer', 'Data Scientist', 'Data Analyst', 'Systems Administrator', 'Network Engineer', 'IT Support Officer', 'Cybersecurity Analyst', 'Database Administrator', 'Web Developer', 'Mobile Developer', 'DevOps Engineer', 'ICT Manager', 'Other'],
+  'Finance & Accounting': ['Accountant', 'Finance Manager', 'Auditor', 'Financial Analyst', 'Budget Officer', 'Tax Officer', 'Procurement Officer', 'Other'],
+  'Health & Medical': ['Nurse', 'Clinical Officer', 'Doctor / Medical Officer', 'Pharmacist', 'Laboratory Technician', 'Public Health Officer', 'Health Surveillance Assistant', 'Other'],
+  'Education': ['Teacher', 'Lecturer', 'Education Officer', 'School Principal', 'Curriculum Developer', 'Other'],
+  'Management & Administration': ['Administrator', 'Project Manager', 'Operations Manager', 'Director', 'Executive Director', 'CEO / Managing Director', 'Programme Officer', 'Other'],
+  'Sales & Marketing': ['Sales Representative', 'Marketing Executive', 'Marketing Manager', 'Brand Manager', 'Business Development Officer', 'Other'],
+  'Human Resources': ['HR Manager', 'HR Officer', 'Recruitment Officer', 'Training & Development Officer', 'Other'],
+  'Legal': ['Legal Officer', 'Lawyer / Advocate', 'Compliance Officer', 'Other'],
+  'Logistics & Supply Chain': ['Logistics Officer', 'Supply Chain Manager', 'Warehouse Manager', 'Driver', 'Other'],
+  'Engineering': ['Civil Engineer', 'Mechanical Engineer', 'Electrical Engineer', 'Structural Engineer', 'Other'],
+  'Security': ['Security Officer', 'Security Manager', 'Other'],
+  'Consulting': ['Consultant', 'Other'],
+  'Other': ['Intern', 'Other'],
+};
 
 export default function JobPosting() {
   const [step, setStep] = useState(1);
@@ -33,6 +50,7 @@ export default function JobPosting() {
     skills: []
   });
   const [currentSkill, setCurrentSkill] = useState('');
+  const [titleCategory, setTitleCategory] = useState('');
 
   const [attachAssessment, setAttachAssessment] = useState(false);
   const [strictRestriction, setStrictRestriction] = useState(false);
@@ -86,7 +104,7 @@ export default function JobPosting() {
 
   const handleNext = () => {
     if (step === 1) {
-      if (!formData.title || !formData.institution || !formData.jobType || !formData.location) {
+      if (!formData.title || formData.title === 'Other' || !formData.institution || !formData.jobType || !formData.location) {
         alert("Please fill in all mandatory fields (marked with *) before proceeding.");
         return;
       }
@@ -192,70 +210,78 @@ export default function JobPosting() {
             <h2 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Basic Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              {/* Job Title */}
+              {/* Job Title — category first, then specific title */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Job Title <span className="text-red-500">*</span></label>
-                <select
-                  value={formData.title}
-                  onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white"
-                >
-                  <option value="" disabled>Select Job Title</option>
-                  <option>Software Engineer</option>
-                  <option>Data Scientist</option>
-                  <option>Project Manager</option>
-                  <option>Accountant</option>
-                  <option>HR Manager</option>
-                  <option>Marketing Executive</option>
-                  <option>Sales Representative</option>
-                  <option>Nurse</option>
-                  <option>Clinical Officer</option>
-                  <option>Doctor / Medical Officer</option>
-                  <option>Teacher</option>
-                  <option>Lecturer</option>
-                  <option>Administrator</option>
-                  <option>Director</option>
-                  <option>Executive Director</option>
-                  <option>CEO / Managing Director</option>
-                  <option>Consultant</option>
-                  <option>Legal Officer</option>
-                  <option>Finance Manager</option>
-                  <option>Procurement Officer</option>
-                  <option>Logistics Officer</option>
-                  <option>Driver</option>
-                  <option>Security Officer</option>
-                  <option>Intern</option>
-                  <option>Other</option>
-                </select>
-              </div>
-
-              {/* Institution / Organization */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Institution / Organization <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Job Category <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" />
                   <select
-                    value={formData.institution}
-                    onChange={e => setFormData({ ...formData, institution: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
+                    value={titleCategory}
+                    onChange={e => { setTitleCategory(e.target.value); setFormData({ ...formData, title: '' }); }}
+                    className="w-full px-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
                   >
-                    <option value="" disabled>Select Institution / Organization</option>
-                    {/* Show employer's own company name first if available */}
-                    {user?.employerProfile?.companyName && (
-                      <option value={user.employerProfile.companyName}>{user.employerProfile.companyName}</option>
-                    )}
-                    {user?.employerProfile?.personal?.companyName &&
-                      user.employerProfile.personal.companyName !== user?.employerProfile?.companyName && (
-                        <option value={user.employerProfile.personal.companyName}>{user.employerProfile.personal.companyName}</option>
-                      )}
-                    {MALAWI_ORGANIZATIONS.map(org => (
-                      <option key={org} value={org}>{org}</option>
+                    <option value="" disabled>Select a job category</option>
+                    {Object.keys(JOB_CATEGORIES).map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
+                  {titleCategory && (
+                    <button type="button" onClick={() => { setTitleCategory(''); setFormData({ ...formData, title: '' }); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Job Type (renamed from Contract Type) */}
+              {titleCategory && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Job Title <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      value={formData.title === '' || JOB_CATEGORIES[titleCategory]?.includes(formData.title) ? formData.title : '__custom__'}
+                      onChange={e => {
+                        if (e.target.value !== '__custom__') setFormData({ ...formData, title: e.target.value });
+                        else setFormData({ ...formData, title: '' });
+                      }}
+                      className="w-full px-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
+                    >
+                      <option value="" disabled>Select specific job title</option>
+                      {JOB_CATEGORIES[titleCategory].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    {formData.title && formData.title !== 'Other' && (
+                      <button type="button" onClick={() => setFormData({ ...formData, title: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {formData.title === 'Other' && (
+                    <div className="mt-2 relative">
+                      <input
+                        type="text"
+                        value={formData.title === 'Other' ? '' : formData.title}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="Type the specific job title..."
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Institution — auto-filled from employer profile, read-only */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Institution / Organization <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={formData.institution}
+                  readOnly
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-700 cursor-not-allowed outline-none"
+                  placeholder="Your company name from registration"
+                />
+              </div>
+
+              {/* Job Type */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Job Type <span className="text-red-500">*</span></label>
                 <select
@@ -283,13 +309,18 @@ export default function JobPosting() {
                     <select
                       value={formData.duration}
                       onChange={e => setFormData({ ...formData, duration: e.target.value })}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
+                      className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
                     >
                       <option value="" disabled>Select Duration</option>
                       {JOB_DURATIONS.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
+                    {formData.duration && (
+                      <button type="button" onClick={() => setFormData({ ...formData, duration: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -302,7 +333,7 @@ export default function JobPosting() {
                   <select
                     value={formData.location}
                     onChange={e => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
+                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none"
                   >
                     <option value="" disabled>Select a district</option>
                     <option value="Remote">Remote</option>
@@ -310,6 +341,11 @@ export default function JobPosting() {
                       <option key={district} value={district}>{district}</option>
                     ))}
                   </select>
+                  {formData.location && (
+                    <button type="button" onClick={() => setFormData({ ...formData, location: '' })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -380,6 +416,7 @@ export default function JobPosting() {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Industry</label>
                     <select value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
+                      <option value="" disabled>Select industry</option>
                       <option>Technology</option>
                       <option>Design</option>
                       <option>Finance</option>
@@ -396,6 +433,7 @@ export default function JobPosting() {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Minimum Years of Experience</label>
                     <select value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 outline-none bg-white">
+                      <option value="" disabled>Select experience level</option>
                       <option>0-1 Year</option>
                       <option>2 Years</option>
                       <option>3-4 Years</option>

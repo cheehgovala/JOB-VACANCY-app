@@ -1,12 +1,31 @@
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
-import { Award, Briefcase, Check, ChevronRight, Code, Download, FileText, GraduationCap, Link, User, Users } from 'lucide-react';
+import { Award, Briefcase, Check, ChevronRight, Code, Download, FileText, GraduationCap, Link, User, Users, Plus, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { MALAWI_DISTRICTS } from '../../utils/constants.js';
 import { getEmailError, getPhoneError } from '../../utils/validation.js';
 import api from '../../api/axios';
+
+// Job categories for the two-step title selector
+const CV_JOB_CATEGORIES = {
+  'Technology & IT': ['Software Engineer', 'Data Scientist', 'Data Analyst', 'Systems Administrator', 'Network Engineer', 'IT Support Officer', 'Web Developer', 'Mobile Developer', 'DevOps Engineer', 'ICT Manager', 'Other'],
+  'Finance & Accounting': ['Accountant', 'Finance Manager', 'Auditor', 'Financial Analyst', 'Budget Officer', 'Tax Officer', 'Procurement Officer', 'Other'],
+  'Health & Medical': ['Nurse', 'Clinical Officer', 'Doctor / Medical Officer', 'Pharmacist', 'Laboratory Technician', 'Public Health Officer', 'Other'],
+  'Education': ['Teacher', 'Lecturer', 'Education Officer', 'School Principal', 'Other'],
+  'Management & Administration': ['Administrator', 'Project Manager', 'Operations Manager', 'Director', 'Executive Director', 'CEO / Managing Director', 'Programme Officer', 'Other'],
+  'Sales & Marketing': ['Sales Representative', 'Marketing Executive', 'Marketing Manager', 'Business Development Officer', 'Other'],
+  'Human Resources': ['HR Manager', 'HR Officer', 'Recruitment Officer', 'Other'],
+  'Legal': ['Legal Officer', 'Lawyer / Advocate', 'Compliance Officer', 'Other'],
+  'Logistics & Supply Chain': ['Logistics Officer', 'Supply Chain Manager', 'Driver', 'Other'],
+  'Engineering': ['Civil Engineer', 'Mechanical Engineer', 'Electrical Engineer', 'Other'],
+  'Security': ['Security Officer', 'Security Manager', 'Other'],
+  'Other': ['Intern', 'Other'],
+};
+
+const CURRENT_YEAR = new Date().getFullYear();
+const TODAY = new Date().toISOString().split('T')[0];
 
 export default function CVBuilder() {
   const navigate = useNavigate();
@@ -24,6 +43,9 @@ export default function CVBuilder() {
     location: '',
     bio: ''
   });
+  const [showCertifications, setShowCertifications] = useState(false);
+  // Per-experience-entry: track which category is selected for job title
+  const [expTitleCategories, setExpTitleCategories] = useState(['']);
 
   const [formData, setFormData] = useState({
     personal: { fullName: '', email: '', phone: '', location: '', bio: '', nationalIdUrl: '' },
@@ -353,43 +375,6 @@ export default function CVBuilder() {
         <option value="Unicaf University" />
       </datalist>
 
-      <datalist id="job-titles-list">
-        <option value="Software Engineer" />
-        <option value="Project Manager" />
-        <option value="Accountant" />
-        <option value="Teacher" />
-        <option value="Nurse" />
-        <option value="Sales Representative" />
-        <option value="Marketing Manager" />
-        <option value="Human Resources Manager" />
-        <option value="Administrative Assistant" />
-        <option value="Business Analyst" />
-        <option value="Data Analyst" />
-        <option value="Customer Service Representative" />
-      </datalist>
-
-      <datalist id="companies-list">
-        <option value="Airtel Malawi" />
-        <option value="TNM" />
-        <option value="Standard Bank Malawi" />
-        <option value="National Bank of Malawi" />
-        <option value="FDH Bank" />
-        <option value="Illovo Sugar Malawi" />
-        <option value="Castel Malawi" />
-        <option value="Puma Energy" />
-        <option value="Malawi Revenue Authority (MRA)" />
-        <option value="NBS Bank" />
-      </datalist>
-
-      <datalist id="duration-list">
-        <option value="2023 - Present" />
-        <option value="2022 - Present" />
-        <option value="2021 - Present" />
-        <option value="2020 - Present" />
-        <option value="2019 - Present" />
-        <option value="2018 - Present" />
-      </datalist>
-
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Digital CV Builder</h1>
@@ -426,40 +411,48 @@ export default function CVBuilder() {
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 min-h-[400px]">
         {step === 1 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Personal Details</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Personal Details</h2>
+            <p className="text-sm text-gray-500 mb-6">Fields marked with <span className="text-red-500">*</span> are mandatory.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
                 <input name="fullName" value={formData.personal.fullName} onChange={handlePersonalChange} type="text" className={`w-full px-4 py-2 border ${personalErrors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="e.g. Kondwani Phiri" />
                 {personalErrors.fullName && <p className="mt-1 text-sm text-red-600">{personalErrors.fullName}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input name="email" value={formData.personal.email} onChange={handlePersonalChange} type="email" className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 ${personalErrors.email ? 'border-red-500' : ''}`} placeholder="kondwani@example.com" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                <input name="email" value={formData.personal.email} onChange={handlePersonalChange} type="email" className={`w-full px-4 py-2 border ${personalErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="kondwani@example.com" />
                 {personalErrors.email && <p className="mt-1 text-sm text-red-600">{personalErrors.email}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input name="phone" value={formData.personal.phone} onChange={handlePersonalChange} type="tel" className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 ${personalErrors.phone ? 'border-red-500' : ''}`} placeholder="+265 88X XXX XXX" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
+                <input name="phone" value={formData.personal.phone} onChange={handlePersonalChange} type="tel" className={`w-full px-4 py-2 border ${personalErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="+265 88X XXX XXX" />
                 {personalErrors.phone && <p className="mt-1 text-sm text-red-600">{personalErrors.phone}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <select name="location" value={formData.personal.location} onChange={handlePersonalChange} className={`w-full px-4 py-2 border ${personalErrors.location ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none`}>
-                  <option value="" disabled>Select a district</option>
-                  {MALAWI_DISTRICTS.map(district => (
-                    <option key={district} value={district}>{district}</option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <select name="location" value={formData.personal.location} onChange={handlePersonalChange} className={`w-full px-4 py-2 border ${personalErrors.location ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none`}>
+                    <option value="" disabled>Select a district</option>
+                    {MALAWI_DISTRICTS.map(district => (
+                      <option key={district} value={district}>{district}</option>
+                    ))}
+                  </select>
+                  {formData.personal.location && (
+                    <button type="button" onClick={() => handlePersonalChange({ target: { name: 'location', value: '' } })} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
                 {personalErrors.location && <p className="mt-1 text-sm text-red-600">{personalErrors.location}</p>}
               </div>
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Professional Bio <span className="text-red-500">*</span></label>
                 <textarea name="bio" value={formData.personal.bio} onChange={handlePersonalChange} rows={4} className={`w-full px-4 py-2 border ${personalErrors.bio ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-primary-500 focus:border-primary-500`} placeholder="Briefly describe your professional background and goals..."></textarea>
                 {personalErrors.bio && <p className="mt-1 text-sm text-red-600">{personalErrors.bio}</p>}
               </div>
               <div className="col-span-1 md:col-span-2 pt-2 border-t border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-2">National ID Attachment</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">National ID Attachment <span className="text-gray-400 font-normal">(Optional)</span></label>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <input 
                     type="file" 
@@ -471,7 +464,7 @@ export default function CVBuilder() {
                         if (url) {
                           setFormData({
                             ...formData,
-                            personal: { ...formData.personal, nationalIdUrl: `http://localhost:5000${url}` }
+                            personal: { ...formData.personal, nationalIdUrl: `${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:5000'}${url}` }
                           });
                         }
                         setUploadingState({ type: null, index: null });
@@ -480,7 +473,7 @@ export default function CVBuilder() {
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" 
                   />
                   {uploadingState.type === 'nationalId' && <div className="text-sm font-medium text-blue-600 animate-pulse">Uploading file...</div>}
-                  {formData.personal.nationalIdUrl && formData.personal.nationalIdUrl !== '' && (
+                  {formData.personal.nationalIdUrl && (
                     <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
                       <Check className="w-4 h-4"/> 
                       <span>Attached Successfully</span>
@@ -494,32 +487,79 @@ export default function CVBuilder() {
 
         {step === 2 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-bold text-gray-900">Work Experience</h2>
-              <button onClick={() => setFormData({...formData, experience: [...formData.experience, {title: '', company: '', startDate: '', endDate: '', description: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
+              <button onClick={() => {
+                setFormData({...formData, experience: [...formData.experience, {title: '', company: '', startDate: '', endDate: '', description: ''}]});
+                setExpTitleCategories([...expTitleCategories, '']);
+              }} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
             </div>
+            <p className="text-sm text-gray-500 mb-6">Fields marked with <span className="text-red-500">*</span> are mandatory.</p>
             {formData.experience.map((exp, i) => (
               <div key={i} className="space-y-4 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Job Category */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                    <input 
-                      list="job-titles-list"
-                      type="text" 
-                      value={exp.title}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Category <span className="text-red-500">*</span></label>
+                    <select
+                      value={expTitleCategories[i] || ''}
                       onChange={(e) => {
+                        const cats = [...expTitleCategories];
+                        cats[i] = e.target.value;
+                        setExpTitleCategories(cats);
                         const newExp = [...formData.experience];
-                        newExp[i].title = e.target.value;
+                        newExp[i].title = '';
                         setFormData({ ...formData, experience: newExp });
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                      placeholder="e.g. Sales Manager" 
-                    />
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
+                    >
+                      <option value="" disabled>Select category</option>
+                      {Object.keys(CV_JOB_CATEGORIES).map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
                   </div>
+                  {/* Job Title */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title <span className="text-red-500">*</span></label>
+                    {expTitleCategories[i] ? (
+                      <>
+                        <select
+                          value={CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) ? exp.title : (exp.title ? 'Other' : '')}
+                          onChange={(e) => {
+                            const newExp = [...formData.experience];
+                            newExp[i].title = e.target.value === 'Other' ? '' : e.target.value;
+                            setFormData({ ...formData, experience: newExp });
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
+                        >
+                          <option value="" disabled>Select title</option>
+                          {CV_JOB_CATEGORIES[expTitleCategories[i]].map(t => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        {(!CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) || exp.title === '') && expTitleCategories[i] && (
+                          <input
+                            type="text"
+                            value={exp.title}
+                            onChange={(e) => {
+                              const newExp = [...formData.experience];
+                              newExp[i].title = e.target.value;
+                              setFormData({ ...formData, experience: newExp });
+                            }}
+                            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                            placeholder="Type specific job title..."
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <input type="text" value={exp.title} disabled className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed" placeholder="Select a category first" />
+                    )}
+                  </div>
+                  {/* Company */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company <span className="text-red-500">*</span></label>
                     <input 
-                      list="companies-list"
                       type="text" 
                       value={exp.company}
                       onChange={(e) => {
@@ -533,9 +573,10 @@ export default function CVBuilder() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Start Date <span className="text-red-500">*</span></label>
                       <input 
                         type="date" 
+                        max={TODAY}
                         value={exp.startDate || ''}
                         onChange={(e) => {
                           const newExp = [...formData.experience];
@@ -546,9 +587,10 @@ export default function CVBuilder() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">End Date (Leave blank if current)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">End Date <span className="text-gray-400 font-normal">(leave blank if current)</span></label>
                       <input 
                         type="date" 
+                        max={TODAY}
                         value={exp.endDate || ''}
                         onChange={(e) => {
                           const newExp = [...formData.experience];
@@ -560,7 +602,7 @@ export default function CVBuilder() {
                     </div>
                   </div>
                   <div className="col-span-1 md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
                     <textarea 
                       rows={3} 
                       value={exp.description}
@@ -581,14 +623,15 @@ export default function CVBuilder() {
 
         {step === 3 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-bold text-gray-900">Education</h2>
               <button onClick={() => setFormData({...formData, education: [...formData.education, {degree: '', institution: '', year: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
             </div>
+            <p className="text-sm text-gray-500 mb-6">Fields marked with <span className="text-red-500">*</span> are mandatory.</p>
             {formData.education.map((edu, i) => (
               <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
                 <div className="col-span-1 md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Degree / Qualification</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Degree / Qualification <span className="text-red-500">*</span></label>
                   <input 
                     list="degrees-list"
                     type="text" 
@@ -618,7 +661,7 @@ export default function CVBuilder() {
                   </datalist>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Institution <span className="text-red-500">*</span></label>
                   <input 
                     list="institutions-list"
                     type="text" 
@@ -633,21 +676,32 @@ export default function CVBuilder() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-                  <select 
-                    value={edu.year}
-                    onChange={(e) => {
-                      const newEdu = [...formData.education];
-                      newEdu[i].year = e.target.value;
-                      setFormData({ ...formData, education: newEdu });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
-                  >
-                    <option value="">Select Year</option>
-                    {Array.from({length: 40}, (_, i) => new Date().getFullYear() + 5 - i).map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select 
+                      value={edu.year}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].year = e.target.value;
+                        setFormData({ ...formData, education: newEdu });
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none"
+                    >
+                      <option value="">Select Year</option>
+                      {Array.from({length: 40}, (_, j) => CURRENT_YEAR - j).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                    {edu.year && (
+                      <button type="button" onClick={() => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].year = '';
+                        setFormData({ ...formData, education: newEdu });
+                      }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -656,91 +710,120 @@ export default function CVBuilder() {
 
         {step === 4 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-bold text-gray-900">Certifications</h2>
-              <button onClick={() => setFormData({...formData, certifications: [...formData.certifications, {name: '', organization: '', year: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
             </div>
-            {formData.certifications.map((cert, i) => (
-              <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Certification Name</label>
-                  <input 
-                    list="certificates-list"
-                    type="text" 
-                    value={cert.name}
-                    onChange={(e) => {
-                      const newCerts = [...formData.certifications];
-                      newCerts[i].name = e.target.value;
-                      setFormData({ ...formData, certifications: newCerts });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. AWS Certified Solutions Architect" 
-                  />
-                  <datalist id="certificates-list">
-                    <option value="AWS Certified Solutions Architect" />
-                    <option value="Cisco CCNA" />
-                    <option value="CompTIA A+" />
-                    <option value="CompTIA Security+" />
-                    <option value="PMP (Project Management Professional)" />
-                    <option value="CPA (Certified Public Accountant)" />
-                    <option value="ACCA" />
-                    <option value="Digital Marketing Certification" />
-                    <option value="Google IT Support" />
-                    <option value="Microsoft Certified: Azure Fundamentals" />
-                    <option value="Certified Ethical Hacker (CEH)" />
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Organization</label>
-                  <input 
-                    list="organizations-list"
-                    type="text" 
-                    value={cert.organization}
-                    onChange={(e) => {
-                      const newCerts = [...formData.certifications];
-                      newCerts[i].organization = e.target.value;
-                      setFormData({ ...formData, certifications: newCerts });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. Amazon Web Services" 
-                  />
-                  <datalist id="organizations-list">
-                    <option value="Amazon Web Services (AWS)" />
-                    <option value="Cisco" />
-                    <option value="CompTIA" />
-                    <option value="Microsoft" />
-                    <option value="Google" />
-                    <option value="Project Management Institute (PMI)" />
-                    <option value="EC-Council" />
-                    <option value="ACCA" />
-                    <option value="CPA" />
-                    <option value="IBM" />
-                    <option value="Oracle" />
-                    <option value="HubSpot" />
-                    <option value="Meta (Facebook)" />
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                  <select 
-                    value={cert.year}
-                    onChange={(e) => {
-                      const newCerts = [...formData.certifications];
-                      newCerts[i].year = e.target.value;
-                      setFormData({ ...formData, certifications: newCerts });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
-                  >
-                    <option value="">Select Year</option>
-                    {Array.from({length: 40}, (_, i) => new Date().getFullYear() + 5 - i).map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-span-1 md:col-span-2 pt-2">
-                </div>
+            <p className="text-sm text-gray-500 mb-6">This section is optional. Toggle it on if you have certifications to add.</p>
+
+            {/* Optional toggle */}
+            <div
+              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer mb-6 transition-all ${showCertifications ? 'border-primary-300 bg-primary-50' : 'border-gray-200 bg-gray-50'}`}
+              onClick={() => setShowCertifications(!showCertifications)}
+            >
+              <div>
+                <p className="font-semibold text-gray-800">I have certifications to add</p>
+                <p className="text-xs text-gray-500 mt-0.5">Click to expand and fill in your certifications</p>
               </div>
-            ))}
+              <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${showCertifications ? 'bg-primary-600' : 'bg-gray-300'}`}>
+                <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${showCertifications ? 'translate-x-6' : ''}`}></div>
+              </div>
+            </div>
+
+            {showCertifications && (
+              <>
+                <div className="flex justify-end mb-4">
+                  <button onClick={() => setFormData({...formData, certifications: [...formData.certifications, {name: '', organization: '', year: '', attachmentUrl: ''}]})} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add Another</button>
+                </div>
+                {formData.certifications.map((cert, i) => (
+                  <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
+                    <div className="col-span-1 md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Certification Name</label>
+                      <input 
+                        list="certificates-list"
+                        type="text" 
+                        value={cert.name}
+                        onChange={(e) => {
+                          const newCerts = [...formData.certifications];
+                          newCerts[i].name = e.target.value;
+                          setFormData({ ...formData, certifications: newCerts });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                        placeholder="e.g. AWS Certified Solutions Architect" 
+                      />
+                      <datalist id="certificates-list">
+                        <option value="AWS Certified Solutions Architect" />
+                        <option value="Cisco CCNA" />
+                        <option value="CompTIA A+" />
+                        <option value="CompTIA Security+" />
+                        <option value="PMP (Project Management Professional)" />
+                        <option value="CPA (Certified Public Accountant)" />
+                        <option value="ACCA" />
+                        <option value="Digital Marketing Certification" />
+                        <option value="Google IT Support" />
+                        <option value="Microsoft Certified: Azure Fundamentals" />
+                        <option value="Certified Ethical Hacker (CEH)" />
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Organization</label>
+                      <input 
+                        list="organizations-list"
+                        type="text" 
+                        value={cert.organization}
+                        onChange={(e) => {
+                          const newCerts = [...formData.certifications];
+                          newCerts[i].organization = e.target.value;
+                          setFormData({ ...formData, certifications: newCerts });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                        placeholder="e.g. Amazon Web Services" 
+                      />
+                      <datalist id="organizations-list">
+                        <option value="Amazon Web Services (AWS)" />
+                        <option value="Cisco" />
+                        <option value="CompTIA" />
+                        <option value="Microsoft" />
+                        <option value="Google" />
+                        <option value="Project Management Institute (PMI)" />
+                        <option value="EC-Council" />
+                        <option value="ACCA" />
+                        <option value="IBM" />
+                        <option value="Oracle" />
+                        <option value="HubSpot" />
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                      <div className="relative">
+                        <select 
+                          value={cert.year}
+                          onChange={(e) => {
+                            const newCerts = [...formData.certifications];
+                            newCerts[i].year = e.target.value;
+                            setFormData({ ...formData, certifications: newCerts });
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none"
+                        >
+                          <option value="">Select Year</option>
+                          {Array.from({length: 30}, (_, j) => CURRENT_YEAR - j).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                        {cert.year && (
+                          <button type="button" onClick={() => {
+                            const newCerts = [...formData.certifications];
+                            newCerts[i].year = '';
+                            setFormData({ ...formData, certifications: newCerts });
+                          }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </motion.div>
         )}
 
