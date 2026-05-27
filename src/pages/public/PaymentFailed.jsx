@@ -2,20 +2,33 @@ import { motion } from 'framer-motion';
 import { XCircle, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios.js';
 
 export default function PaymentFailed() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   useEffect(() => {
+    // Refresh profile to ensure no stale subscription state
+    const refreshProfile = async () => {
+      try {
+        const res = await api.get('/auth/profile');
+        const freshUser = res.data.user || res.data;
+        if (freshUser && typeof setUser === 'function') {
+          setUser(freshUser);
+        }
+      } catch (e) {
+        // silent — user stays logged in with existing state
+      }
+    };
+    refreshProfile();
+
     const timer = setTimeout(() => {
       navigate('/subscription');
     }, 4000);
     return () => clearTimeout(timer);
-  }, [navigate]);
-
-  const handleRetry = () => {
-    navigate('/subscription');
-  };
+  }, [navigate, setUser]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -41,15 +54,15 @@ export default function PaymentFailed() {
             Payment Failed
           </h2>
           <p className="text-gray-500 mb-6">
-            Unfortunately, we could not process your payment at this time. Please try again or use a different payment method.
+            Unfortunately, we could not process your payment at this time. Please try again.
           </p>
 
           <p className="text-sm text-gray-500 font-medium mb-8 animate-pulse">
-            Redirecting you automatically...
+            Redirecting you to try again...
           </p>
 
           <button
-            onClick={handleRetry}
+            onClick={() => navigate('/subscription')}
             className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-all active:scale-[0.98]"
           >
             <RefreshCcw className="h-5 w-5 mr-2" />

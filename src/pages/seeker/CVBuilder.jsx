@@ -501,43 +501,68 @@ export default function CVBuilder() {
                   {/* Job Category */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Job Category <span className="text-red-500">*</span></label>
-                    <select
-                      value={expTitleCategories[i] || ''}
-                      onChange={(e) => {
-                        const cats = [...expTitleCategories];
-                        cats[i] = e.target.value;
-                        setExpTitleCategories(cats);
-                        const newExp = [...formData.experience];
-                        newExp[i].title = '';
-                        setFormData({ ...formData, experience: newExp });
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
-                    >
-                      <option value="" disabled>Select category</option>
-                      {Object.keys(CV_JOB_CATEGORIES).map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={expTitleCategories[i] || ''}
+                        onChange={(e) => {
+                          const cats = [...expTitleCategories];
+                          cats[i] = e.target.value;
+                          setExpTitleCategories(cats);
+                          const newExp = [...formData.experience];
+                          newExp[i].title = '';
+                          setFormData({ ...formData, experience: newExp });
+                        }}
+                        className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none"
+                      >
+                        <option value="" disabled>Select category</option>
+                        {Object.keys(CV_JOB_CATEGORIES).map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      {expTitleCategories[i] && (
+                        <button type="button" onClick={() => {
+                          const cats = [...expTitleCategories];
+                          cats[i] = '';
+                          setExpTitleCategories(cats);
+                          const newExp = [...formData.experience];
+                          newExp[i].title = '';
+                          setFormData({ ...formData, experience: newExp });
+                        }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {/* Job Title */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Job Title <span className="text-red-500">*</span></label>
                     {expTitleCategories[i] ? (
                       <>
-                        <select
-                          value={CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) ? exp.title : (exp.title ? 'Other' : '')}
-                          onChange={(e) => {
-                            const newExp = [...formData.experience];
-                            newExp[i].title = e.target.value === 'Other' ? '' : e.target.value;
-                            setFormData({ ...formData, experience: newExp });
-                          }}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white"
-                        >
-                          <option value="" disabled>Select title</option>
-                          {CV_JOB_CATEGORIES[expTitleCategories[i]].map(t => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) ? exp.title : (exp.title ? 'Other' : '')}
+                            onChange={(e) => {
+                              const newExp = [...formData.experience];
+                              newExp[i].title = e.target.value === 'Other' ? '' : e.target.value;
+                              setFormData({ ...formData, experience: newExp });
+                            }}
+                            className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 bg-white appearance-none"
+                          >
+                            <option value="" disabled>Select title</option>
+                            {CV_JOB_CATEGORIES[expTitleCategories[i]].map(t => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                          {exp.title && CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) && exp.title !== 'Other' && (
+                            <button type="button" onClick={() => {
+                              const newExp = [...formData.experience];
+                              newExp[i].title = '';
+                              setFormData({ ...formData, experience: newExp });
+                            }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                         {(!CV_JOB_CATEGORIES[expTitleCategories[i]]?.includes(exp.title) || exp.title === '') && expTitleCategories[i] && (
                           <input
                             type="text"

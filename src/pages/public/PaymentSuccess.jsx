@@ -1,27 +1,37 @@
 import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-
-const PLAN_DAYS = {
-  'employer_premium': 30,
-  'seeker_basic': 3,
-  'seeker_premium': 30
-};
+import api from '../../api/axios.js';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const planId = searchParams.get('plan') || 'seeker_basic';
-  const { user, updateSubscription } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
-    // Only update if not already updated (basic mock logic)
-    if (user && !user.hasActiveSubscription) {
-      updateSubscription(planId, PLAN_DAYS[planId]);
-    }
+    // Refresh user profile from backend — subscription was activated by the verify endpoint
+    const refreshProfile = async () => {
+      try {
+        const res = await api.get('/auth/profile');
+        const freshUser = res.data.user || res.data;
+        if (freshUser && typeof setUser === 'function') {
+          setUser(freshUser);
+        }
+        setVerified(true);
+      } catch (e) {
+        console.error('Failed to refresh profile', e);
+        setVerified(true);
+      }
+    };
+    refreshProfile();
+  }, []);
 
+  useEffect(() => {
+    if (!verified) return;
     const timer = setTimeout(() => {
       if (user?.role === 'employer') {
         navigate('/employer/dashboard');
@@ -29,9 +39,8 @@ export default function PaymentSuccess() {
         navigate('/seeker/cv-builder');
       }
     }, 4000);
-
     return () => clearTimeout(timer);
-  }, [user, planId, updateSubscription, navigate]);
+  }, [verified, user, navigate]);
 
   const handleReturn = () => {
     if (user?.role === 'employer') {
@@ -76,8 +85,7 @@ export default function PaymentSuccess() {
             <div>
               <h4 className="text-sm font-bold text-yellow-800">Automatic Renewal Enabled</h4>
               <p className="text-sm text-yellow-700 mt-1">
-                Your subscription will automatically renew at the end of the billing period to ensure uninterrupted access. 
-                You will receive a reminder 24 hours before your card/mobile wallet is charged.
+                Your subscription will automatically renew at the end of the billing period to ensure uninterrupted access.
               </p>
             </div>
           </div>

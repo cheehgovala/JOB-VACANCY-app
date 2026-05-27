@@ -191,7 +191,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ 
-        user, login, logout, registerUser, verifyOTP, updateSubscription, 
+        user, setUser, login, logout, registerUser, verifyOTP, updateSubscription, 
         updateSeekerProfile, saveJob, applyToJob, publishJob, updateJob, deleteJob, updateProfilePicture, loading,
         forgotPassword, resetPassword
     }}>

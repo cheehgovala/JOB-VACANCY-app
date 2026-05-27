@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Briefcase, CheckCircle, FileText, Filter, GraduationCap, MapPin, Search, SlidersHorizontal, AlertTriangle } from 'lucide-react';
+import { ArrowUpRight, Briefcase, CheckCircle, FileText, Filter, GraduationCap, MapPin, Search, SlidersHorizontal, AlertTriangle, X } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
@@ -160,12 +160,17 @@ export default function Pipeline() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Job Listing</label>
-              <select value={jobIdFilter} onChange={(e) => setJobIdFilter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
-                <option value="">All Jobs</option>
-                {availableJobs.map(job => (
-                  <option key={job.id} value={job.id}>{job.title}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select value={jobIdFilter} onChange={(e) => setJobIdFilter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 pr-8 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
+                  <option value="">All Jobs</option>
+                  {availableJobs.map(job => (
+                    <option key={job.id} value={job.id}>{job.title}</option>
+                  ))}
+                </select>
+                {jobIdFilter && (
+                  <button type="button" onClick={() => setJobIdFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X className="w-3.5 h-3.5" /></button>
+                )}
+              </div>
             </div>
 
             <div>
@@ -184,32 +189,47 @@ export default function Pipeline() {
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Location District</label>
-              <select value={locationDistrict} onChange={(e) => setLocationDistrict(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
-                <option value="">All Districts</option>
-                {MALAWI_DISTRICTS.map(district => (
-                  <option key={district} value={district.toLowerCase()}>{district}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select value={locationDistrict} onChange={(e) => setLocationDistrict(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 pr-8 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
+                  <option value="">All Districts</option>
+                  {MALAWI_DISTRICTS.map(district => (
+                    <option key={district} value={district.toLowerCase()}>{district}</option>
+                  ))}
+                </select>
+                {locationDistrict && (
+                  <button type="button" onClick={() => setLocationDistrict('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X className="w-3.5 h-3.5" /></button>
+                )}
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Qualification Level</label>
-              <select value={qualificationLevel} onChange={(e) => setQualificationLevel(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500">
-                <option value="">Any Qualification</option>
-                <option value="Diploma">Diploma</option>
-                <option value="BSc">Bachelor's Degree</option>
-                <option value="MSc">Master's Degree</option>
-              </select>
+              <div className="relative">
+                <select value={qualificationLevel} onChange={(e) => setQualificationLevel(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 pr-8 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
+                  <option value="">Any Qualification</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="BSc">Bachelor's Degree</option>
+                  <option value="MSc">Master's Degree</option>
+                </select>
+                {qualificationLevel && (
+                  <button type="button" onClick={() => setQualificationLevel('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X className="w-3.5 h-3.5" /></button>
+                )}
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Application Date</label>
-              <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm text-gray-700 outline-none focus:border-primary-500">
-                <option value="">Any Time</option>
-                <option value="24h">Last 24 hours</option>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-              </select>
+              <div className="relative">
+                <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 pr-8 text-sm text-gray-700 outline-none focus:border-primary-500 appearance-none">
+                  <option value="">Any Time</option>
+                  <option value="24h">Last 24 hours</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d">Last 30 days</option>
+                </select>
+                {dateRange && (
+                  <button type="button" onClick={() => setDateRange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X className="w-3.5 h-3.5" /></button>
+                )}
+              </div>
             </div>
 
             <div>
