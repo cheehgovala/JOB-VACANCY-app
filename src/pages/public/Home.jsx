@@ -1,47 +1,53 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Search, FileText, CheckCircle, ShieldCheck, Users, MapPin, Briefcase, Clock, DollarSign } from 'lucide-react';
+import { ArrowRight, Search, FileText, CheckCircle, ShieldCheck, Users, MapPin, Briefcase, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const freeJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: "Tech Solutions Ltd",
-    location: "Lilongwe",
-    type: "Full-time",
-    posted: "2 days ago",
-    description: "We are looking for an experienced Frontend Developer to build modern web applications using React and Tailwind CSS. Must have 5+ years of experience."
-  },
-  {
-    id: 2,
-    title: "Marketing Manager",
-    company: "Global Innovations",
-    location: "Blantyre",
-    type: "Contract",
-    posted: "1 week ago",
-    description: "Seeking a creative Marketing Manager to lead our digital campaigns and improve brand visibility across platforms. Proven track record required."
-  },
-  {
-    id: 3,
-    title: "Data Analyst",
-    company: "Finance Corp",
-    location: "Mzuzu (Remote)",
-    type: "Full-time",
-    posted: "3 days ago",
-    description: "Analyze financial data to help drive strategic business decisions. Proficiency in SQL, Python, and modern BI tools required."
-  }
-];
+import api from '../../api/axios';
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [latestJobs, setLatestJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
 
+  // Fetch real latest jobs from backend
   useEffect(() => {
+    const fetchLatestJobs = async () => {
+      try {
+        const { data } = await api.get('/jobs');
+        // Sort by createdAt descending, take the 5 most recent non-expired jobs
+        const sorted = (data || [])
+          .filter(j => !j.applicationDeadline || new Date() <= new Date(j.applicationDeadline))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5);
+        setLatestJobs(sorted);
+      } catch (e) {
+        console.error('Failed to fetch latest jobs', e);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+    fetchLatestJobs();
+  }, []);
+
+  // Auto-rotate carousel
+  useEffect(() => {
+    if (latestJobs.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % freeJobs.length);
+      setCurrentIndex((prev) => (prev + 1) % latestJobs.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [latestJobs]);
+
+  const formatPosted = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return 'Today';
+    if (days === 1) return '1 day ago';
+    if (days < 7) return `${days} days ago`;
+    if (days < 14) return '1 week ago';
+    return `${Math.floor(days / 7)} weeks ago`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -125,68 +131,97 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Free Jobs Overview Section */}
+      {/* Latest Opportunities Section */}
       <section className="py-24 bg-gray-50 border-t border-gray-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Latest Opportunities</h2>
-            <p className="mt-4 text-lg text-gray-500">Explore some of the roles currently available on our platform.</p>
+            <p className="mt-4 text-lg text-gray-500">The most recently posted roles available on our platform.</p>
           </div>
 
-          <div className="relative h-[480px] sm:h-[420px] w-full max-w-2xl mx-auto" style={{ perspective: '1200px' }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentIndex}
-                initial={{ opacity: 0, rotateX: -90 }}
-                animate={{ opacity: 1, rotateX: 0 }}
-                exit={{ opacity: 0, rotateX: 90 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                style={{ transformOrigin: "center center" }}
-                className="absolute inset-0 bg-white rounded-2xl p-8 shadow-xl border border-gray-100 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-6">
+          {jobsLoading ? (
+            <div className="flex justify-center items-center h-48">
+              <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+            </div>
+          ) : latestJobs.length === 0 ? (
+            <div className="text-center text-gray-400 py-16">
+              <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-lg font-medium">No open positions at the moment.</p>
+              <p className="text-sm mt-1">Check back soon — new jobs are posted regularly.</p>
+            </div>
+          ) : (
+            <>
+              <div className="relative h-[480px] sm:h-[420px] w-full max-w-2xl mx-auto" style={{ perspective: '1200px' }}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentIndex}
+                    initial={{ opacity: 0, rotateX: -90 }}
+                    animate={{ opacity: 1, rotateX: 0 }}
+                    exit={{ opacity: 0, rotateX: 90 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    style={{ transformOrigin: "center center" }}
+                    className="absolute inset-0 bg-white rounded-2xl p-8 shadow-xl border border-gray-100 flex flex-col justify-between"
+                  >
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{freeJobs[currentIndex].title}</h3>
-                      <p className="text-primary-600 font-semibold">{freeJobs[currentIndex].company}</p>
-                    </div>
-                    <span className="px-4 py-1.5 bg-primary-50 text-primary-700 text-sm font-bold rounded-full">
-                      {freeJobs[currentIndex].type}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-8 text-base leading-relaxed line-clamp-3">
-                    {freeJobs[currentIndex].description}
-                  </p>
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2">{latestJobs[currentIndex].title}</h3>
+                          <p className="text-primary-600 font-semibold">{latestJobs[currentIndex].institution || latestJobs[currentIndex].company}</p>
+                        </div>
+                        <span className="px-4 py-1.5 bg-primary-50 text-primary-700 text-sm font-bold rounded-full flex-shrink-0">
+                          {latestJobs[currentIndex].jobType || latestJobs[currentIndex].type || 'Full-time'}
+                        </span>
+                      </div>
 
-                  <div className="space-y-4 mb-8">
-                    <div className="flex items-center text-base text-gray-500">
-                      <MapPin className="w-5 h-5 mr-3 text-gray-400" />
-                      {freeJobs[currentIndex].location}
-                    </div>
-                    <div className="flex items-center text-base text-gray-500">
-                      <Clock className="w-5 h-5 mr-3 text-gray-400" />
-                      {freeJobs[currentIndex].posted}
-                    </div>
-                  </div>
-                </div>
+                      <p className="text-gray-600 mb-8 text-base leading-relaxed line-clamp-3">
+                        {latestJobs[currentIndex].rolePurpose || latestJobs[currentIndex].description || 'Click to view full details for this role.'}
+                      </p>
 
-                {/* Unclickable state indicator */}
-                <div className="w-full text-center px-4 py-3 bg-gray-50 text-gray-500 rounded-xl font-bold cursor-not-allowed border border-gray-200 uppercase tracking-wider text-sm">
-                  Login to Apply
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          
-          <div className="flex justify-center gap-2 mt-8">
-            {freeJobs.map((_, idx) => (
-              <div 
-                key={idx} 
-                className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-primary-600 w-8' : 'bg-gray-300'}`}
-              />
-            ))}
-          </div>
+                      <div className="space-y-3 mb-8">
+                        <div className="flex items-center text-base text-gray-500">
+                          <MapPin className="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
+                          {latestJobs[currentIndex].location}
+                        </div>
+                        <div className="flex items-center text-base text-gray-500">
+                          <Clock className="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
+                          {formatPosted(latestJobs[currentIndex].createdAt)}
+                        </div>
+                        {latestJobs[currentIndex].experienceLevel && (
+                          <div className="flex items-center text-base text-gray-500">
+                            <Briefcase className="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
+                            Years of Experience Required: {latestJobs[currentIndex].experienceLevel}
+                          </div>
+                        )}
+                        {latestJobs[currentIndex].applicationDeadline && (
+                          <div className="flex items-center text-base text-gray-500">
+                            <CheckCircle className="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
+                            Deadline: {new Date(latestJobs[currentIndex].applicationDeadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/login"
+                      className="w-full text-center px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm"
+                    >
+                      Login to Apply
+                    </Link>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="flex justify-center gap-2 mt-8">
+                {latestJobs.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-primary-600 w-8' : 'bg-gray-300 w-2.5'}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
