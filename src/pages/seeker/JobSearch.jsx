@@ -309,9 +309,14 @@ export default function JobSearch() {
                     <p className="text-gray-800 text-sm mt-1 font-medium">{job.institution || job.company || 'Unknown Company'}</p>
                     <p className="text-gray-600 text-sm">{job.location}</p>
                   </div>
-                  {job.isUpdated && (
-                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100 flex-shrink-0">Updated</span>
-                  )}
+                  <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                    {job.isUpdated && (
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">Updated</span>
+                    )}
+                    {job.applicationDeadline && new Date() > new Date(job.applicationDeadline) && (
+                      <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-bold rounded-full border border-red-100">Deadline Over</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 text-sm text-gray-700 mt-1">
@@ -371,6 +376,14 @@ export default function JobSearch() {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 leading-tight pr-8">{selectedJob.title}</h2>
                     <p className="text-primary-600 font-medium">{selectedJob.institution || selectedJob.company}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedJob.isUpdated && (
+                        <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">Updated</span>
+                      )}
+                      {selectedJob.applicationDeadline && new Date() > new Date(selectedJob.applicationDeadline) && (
+                        <span className="px-2.5 py-0.5 bg-red-50 text-red-700 text-xs font-bold rounded-full border border-red-100">Deadline Over</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button onClick={() => setSelectedJob(null)} className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors">
@@ -385,8 +398,16 @@ export default function JobSearch() {
                   {selectedJob.duration && (
                     <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">⏱ {selectedJob.duration}</span>
                   )}
-                  <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.experience}</span>
+                  {selectedJob.experience && (
+                    <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">Years of Experience Required: {selectedJob.experience}</span>
+                  )}
                   <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium">{selectedJob.industry}</span>
+                  {selectedJob.applicationDeadline && (
+                    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${new Date() > new Date(selectedJob.applicationDeadline) ? 'bg-red-50 border-red-100 text-red-700' : 'bg-orange-50 border-orange-100 text-orange-700'}`}>
+                      📅 Application Deadline: {new Date(selectedJob.applicationDeadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date() > new Date(selectedJob.applicationDeadline) && ' — Closed'}
+                    </span>
+                  )}
                 </div>
 
                 {selectedJob.rolePurpose && (

@@ -55,6 +55,7 @@ export default function JobPosting() {
   const [attachAssessment, setAttachAssessment] = useState(false);
   const [strictRestriction, setStrictRestriction] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showEditChoice, setShowEditChoice] = useState(false);
 
   const { publishJob, updateJob, user } = useAuth();
   const navigate = useNavigate();
@@ -126,8 +127,9 @@ export default function JobPosting() {
     setStep(step + 1);
   };
 
-  const handlePublish = async () => {
+  const handlePublish = async (postAsNew = false) => {
     setIsPublishing(true);
+    setShowEditChoice(false);
 
     const jobData = {
       title: formData.title || 'New Job Listing',
@@ -150,11 +152,11 @@ export default function JobPosting() {
       strictRestriction: strictRestriction,
       isPremium: true,
       match: Math.floor(Math.random() * 21) + 80,
-      date: isEditing ? undefined : new Date().toISOString()
+      date: new Date().toISOString()
     };
 
     let result;
-    if (isEditing) {
+    if (isEditing && !postAsNew) {
       result = await updateJob(id, jobData);
     } else {
       result = await publishJob(jobData);
@@ -593,14 +595,48 @@ export default function JobPosting() {
           </button>
         ) : (
           <button
-            onClick={handlePublish}
+            onClick={() => isEditing ? setShowEditChoice(true) : handlePublish(false)}
             disabled={isPublishing}
             className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md shadow-primary-500/30 disabled:opacity-50"
           >
-            {isPublishing ? (isEditing ? 'Updating...' : 'Publishing...') : (isEditing ? 'Update Job Listing' : 'Publish Job Listing')}
+            {isPublishing ? (isEditing ? 'Saving...' : 'Publishing...') : (isEditing ? 'Save Changes' : 'Publish Job Listing')}
           </button>
         )}
       </div>
+
+      {/* Edit Choice Modal */}
+      {showEditChoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">How would you like to save?</h3>
+            <p className="text-gray-500 text-sm mb-6">Choose whether to update the existing listing or create a fresh new one.</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => handlePublish(false)}
+                disabled={isPublishing}
+                className="w-full flex flex-col items-start p-4 border-2 border-primary-500 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors disabled:opacity-50"
+              >
+                <span className="font-bold text-primary-700">Update Existing Listing</span>
+                <span className="text-sm text-primary-600 mt-0.5">Edits the current job. Seekers will see an "Updated" badge.</span>
+              </button>
+              <button
+                onClick={() => handlePublish(true)}
+                disabled={isPublishing}
+                className="w-full flex flex-col items-start p-4 border-2 border-gray-200 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <span className="font-bold text-gray-800">Post as New Job</span>
+                <span className="text-sm text-gray-500 mt-0.5">Creates a brand new listing. The original job remains unchanged.</span>
+              </button>
+              <button
+                onClick={() => setShowEditChoice(false)}
+                className="w-full py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

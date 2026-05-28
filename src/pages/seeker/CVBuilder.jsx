@@ -657,18 +657,29 @@ export default function CVBuilder() {
               <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-gray-100 rounded-xl bg-gray-50/50 mb-4">
                 <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Degree / Qualification <span className="text-red-500">*</span></label>
-                  <input 
-                    list="degrees-list"
-                    type="text" 
-                    value={edu.degree}
-                    onChange={(e) => {
-                      const newEdu = [...formData.education];
-                      newEdu[i].degree = e.target.value;
-                      setFormData({ ...formData, education: newEdu });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. BSc Computer Science" 
-                  />
+                  <div className="relative">
+                    <input 
+                      list="degrees-list"
+                      type="text" 
+                      value={edu.degree}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].degree = e.target.value;
+                        setFormData({ ...formData, education: newEdu });
+                      }}
+                      className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                      placeholder="e.g. BSc Computer Science" 
+                    />
+                    {edu.degree && (
+                      <button type="button" onClick={() => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].degree = '';
+                        setFormData({ ...formData, education: newEdu });
+                      }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                   <datalist id="degrees-list">
                     <option value="MSCE (Malawi School Certificate of Education)" />
                     <option value="Diploma in Business Management" />
@@ -687,18 +698,29 @@ export default function CVBuilder() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Institution <span className="text-red-500">*</span></label>
-                  <input 
-                    list="institutions-list"
-                    type="text" 
-                    value={edu.institution}
-                    onChange={(e) => {
-                      const newEdu = [...formData.education];
-                      newEdu[i].institution = e.target.value;
-                      setFormData({ ...formData, education: newEdu });
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="e.g. University of Malawi" 
-                  />
+                  <div className="relative">
+                    <input 
+                      list="institutions-list"
+                      type="text" 
+                      value={edu.institution}
+                      onChange={(e) => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].institution = e.target.value;
+                        setFormData({ ...formData, education: newEdu });
+                      }}
+                      className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" 
+                      placeholder="e.g. University of Malawi" 
+                    />
+                    {edu.institution && (
+                      <button type="button" onClick={() => {
+                        const newEdu = [...formData.education];
+                        newEdu[i].institution = '';
+                        setFormData({ ...formData, education: newEdu });
+                      }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year <span className="text-red-500">*</span></label>
