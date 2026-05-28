@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { CreditCard, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios.js';
 
 const PLAN_DETAILS = {
@@ -16,7 +16,6 @@ export default function Payment() {
   const plan = PLAN_DETAILS[planId] || PLAN_DETAILS['seeker_basic'];
   
   const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate();
 
   const handlePay = async (e) => {
     e.preventDefault();
@@ -104,17 +103,6 @@ export default function Payment() {
             <p className="text-xs text-gray-500 text-center mt-4">
               Secure payments powered by PayChangu
             </p>
-
-            {/* Developer Bypass */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => navigate(`/payment-success?plan=${planId}`)}
-                className="w-full flex justify-center py-3 px-4 border border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all active:scale-[0.98]"
-              >
-                Simulate Success (Dev Mode)
-              </button>
-            </div>
           </form>
         </div>
       </div>
