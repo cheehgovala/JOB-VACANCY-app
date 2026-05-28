@@ -20,7 +20,7 @@ export default function Applications() {
         const formatted = data.map(app => ({
           id: app._id,
           job: app.jobId?.title || 'Unknown Role',
-          company: app.jobId?.employerId?.employerProfile?.companyName || 'Unknown Company',
+          company: app.jobId?.institution || app.jobId?.employerId?.employerProfile?.companyName || 'Unknown Company',
           date: new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
           status: app.status,
           score: app.matchScore ? `${app.matchScore}%` : '—'
@@ -34,9 +34,7 @@ export default function Applications() {
         const formattedJobs = unappliedJobs.map(j => ({
           id: j._id || j.id,
           title: j.title,
-          company: j.employerId?.employerProfile?.companyName || 'Unknown Company',
-          title: j.title,
-          company: j.employerId?.employerProfile?.companyName || 'Unknown Company',
+          company: j.institution || j.employerId?.employerProfile?.companyName || 'Unknown Company',
           location: j.location
         }));
         setRecommendedJobs(formattedJobs);
