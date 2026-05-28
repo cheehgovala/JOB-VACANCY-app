@@ -4,6 +4,11 @@ import { ArrowRight, Search, FileText, CheckCircle, ShieldCheck, Users, MapPin, 
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 
+// Simple in-memory cache so we don't re-fetch on every visit
+let jobsCache = null;
+let jobsCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [latestJobs, setLatestJobs] = useState([]);
@@ -12,13 +17,20 @@ export default function Home() {
   // Fetch real latest jobs from backend
   useEffect(() => {
     const fetchLatestJobs = async () => {
+      // Use cache if fresh
+      if (jobsCache && Date.now() - jobsCacheTime < CACHE_TTL) {
+        setLatestJobs(jobsCache);
+        setJobsLoading(false);
+        return;
+      }
       try {
         const { data } = await api.get('/jobs');
-        // Sort by createdAt descending, take the 5 most recent non-expired jobs
         const sorted = (data || [])
           .filter(j => !j.applicationDeadline || new Date() <= new Date(j.applicationDeadline))
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .slice(0, 5);
+        jobsCache = sorted;
+        jobsCacheTime = Date.now();
         setLatestJobs(sorted);
       } catch (e) {
         console.error('Failed to fetch latest jobs', e);
