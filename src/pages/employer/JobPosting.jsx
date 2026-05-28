@@ -92,7 +92,7 @@ export default function JobPosting() {
     } else if (user) {
       setFormData(prev => ({
         ...prev,
-        institution: user?.employerProfile?.companyName || user?.employerProfile?.personal?.companyName || '',
+        institution: user?.employerProfile?.companyName || user?.name || '',
         submissionEmail: user?.email || ''
       }));
     }
