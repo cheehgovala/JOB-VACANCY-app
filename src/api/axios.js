@@ -7,29 +7,50 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to attach the JWT token
+// Global slow-request event — fires if any request takes > 3 seconds
+// Components can listen to 'api:slow' on window to show a loading banner
+let slowTimer = null;
+let activeRequests = 0;
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('talent_mw_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    activeRequests++;
+    // If no response within 3s, dispatch a slow event
+    if (!slowTimer) {
+      slowTimer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('api:slow', { detail: { slow: true } }));
+      }, 3000);
+    }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle token expiry or global errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0) {
+      clearTimeout(slowTimer);
+      slowTimer = null;
+      window.dispatchEvent(new CustomEvent('api:slow', { detail: { slow: false } }));
+    }
+    return response;
+  },
   (error) => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0) {
+      clearTimeout(slowTimer);
+      slowTimer = null;
+      window.dispatchEvent(new CustomEvent('api:slow', { detail: { slow: false } }));
+    }
     if (error.response && error.response.status === 401) {
       // Optional: Auto-logout on token expiration
-      // localStorage.removeItem('talent_mw_token');
-      // localStorage.removeItem('talent_mw_user');
-      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
